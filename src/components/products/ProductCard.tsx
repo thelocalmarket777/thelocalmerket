@@ -11,7 +11,7 @@ interface ProductCardProps {
 }
 
 const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
-  const { addItem } = useCart();
+  const { addItem  } = useCart();
 
   // Generate stars based on rating
   const renderRating = () => {
@@ -32,11 +32,19 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     );
   };
 
+  const saveCart = (cart) => {
+    localStorage.setItem('cart', JSON.stringify(cart));
+  };
+  
+
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    addItem(product.id, 1);
+    addItem(product, 1);
+    
   };
+
+
   
   return (
     <Link 
@@ -71,7 +79,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         {renderRating()}
         
         <div className="flex items-center justify-between mt-4">
-          <p className="text-lg font-semibold text-gray-900">${product.price.toFixed(2)}</p>
+          <p className="text-lg font-semibold text-gray-900">${product.price}</p>
           
           <Button
             size="sm"

@@ -6,13 +6,16 @@ import { Button } from '@/components/ui/button';
 import { Minus, Plus, Trash, ArrowLeft, ArrowRight } from 'lucide-react';
 import { useCart } from '@/contexts/CartContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { Carousel, CarouselContent, CarouselItem } from '@/components/ui/carousel';
 
 const CartPage = () => {
   const { items, updateQuantity, removeItem, subtotal, itemCount } = useCart();
-  const { user } = useAuth();
+
   const navigate = useNavigate();
 
   const handleProceedToCheckout = () => {
+    const token = localStorage.getItem('token')
+    const user = JSON.parse(localStorage.getItem('user'))
     if (user) {
       navigate('/checkout');
     } else {
@@ -47,19 +50,41 @@ const CartPage = () => {
                 </div>
 
                 {items.map((item) => (
-                  <div 
-                    key={item.id} 
+                  <div
+                    key={item.id}
                     className="grid sm:grid-cols-12 gap-4 p-4 border-t border-gray-200 first:border-t-0 items-center"
                   >
                     {/* Product */}
                     <div className="sm:col-span-6 flex items-center gap-4">
                       <Link to={`/product/${item.product.id}`} className="shrink-0">
-                        <img 
-                          src={item.product.imageUrl} 
-                          alt={item.product.name}
-                          className="w-16 h-16 object-cover rounded"
-                        />
-                      </Link>
+                        {
+                          item.product && item.product.media.length > 0 ?
+                          (    <Carousel className="w-full" opts={{ loop: true, align: "start" }}>
+                            <CarouselContent>
+                              {item.product.media.map((media, index) => (
+                                <CarouselItem key={index}>
+                                  {media.file_type === 'image' && (
+                                    <img
+                                      src={media.file}
+                                      alt={media.description || item.product.name}
+                                      className="w-full h-[500px] object-contain"
+                                    />
+                                  )}
+                                </CarouselItem>
+                              ))}
+                            </CarouselContent>
+                          </Carousel>
+                          )
+                   
+                        :
+
+                      (      <img 
+                        src={item.product.imageUrl} 
+                        alt={item.product.name}
+                        className="w-16 h-16 object-cover rounded"
+                        />)
+                                              }
+           </Link>
                       <div className="flex-1 min-w-0">
                         <Link 
                           to={`/product/${item.product.id}`}
@@ -76,27 +101,27 @@ const CartPage = () => {
                     {/* Price */}
                     <div className="sm:col-span-2 text-center">
                       <div className="sm:hidden text-sm text-gray-500">Price:</div>
-                      <div>${item.product.price.toFixed(2)}</div>
+                      <div>${item.product.price}</div>
                     </div>
 
                     {/* Quantity */}
                     <div className="sm:col-span-2">
                       <div className="sm:hidden text-sm text-gray-500 mb-1">Quantity:</div>
                       <div className="flex items-center justify-center">
-                        <button 
+                        <button
                           onClick={() => updateQuantity(item.id, item.quantity - 1)}
                           disabled={item.quantity <= 1}
                           className="w-8 h-8 flex items-center justify-center border border-gray-300 rounded-l text-gray-600 hover:bg-gray-50 disabled:opacity-50"
                         >
                           <Minus size={16} />
                         </button>
-                        <input 
-                          type="text" 
+                        <input
+                          type="text"
                           value={item.quantity}
                           readOnly
                           className="w-10 h-8 border-t border-b border-gray-300 text-center"
                         />
-                        <button 
+                        <button
                           onClick={() => updateQuantity(item.id, item.quantity + 1)}
                           disabled={item.quantity >= item.product.stock}
                           className="w-8 h-8 flex items-center justify-center border border-gray-300 rounded-r text-gray-600 hover:bg-gray-50 disabled:opacity-50"
@@ -114,7 +139,7 @@ const CartPage = () => {
                           ${(item.product.price * item.quantity).toFixed(2)}
                         </div>
                       </div>
-                      <button 
+                      <button
                         onClick={() => removeItem(item.id)}
                         className="text-gray-400 hover:text-red-500"
                         aria-label="Remove item"
@@ -146,7 +171,7 @@ const CartPage = () => {
                   </div>
                 </div>
 
-                <Button 
+                <Button
                   onClick={handleProceedToCheckout}
                   className="w-full gap-2"
                   size="lg"

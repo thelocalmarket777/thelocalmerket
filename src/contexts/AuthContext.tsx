@@ -3,12 +3,13 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { api } from '@/lib/api';
 import { User } from '@/types';
 import { useToast } from '@/components/ui/use-toast';
+import { useNavigate } from 'react-router-dom';
 
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string, name: string) => Promise<void>;
+
   logout: () => void;
   updateProfile: (userData: Partial<User>) => Promise<void>;
 }
@@ -20,65 +21,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const { toast } = useToast();
 
-  useEffect(() => {
-    // Check if user is already logged in
-    const loadUser = () => {
-      try {
-        const currentUser = api.auth.getCurrentUser();
-        setUser(currentUser);
-      } catch (error) {
-        console.error('Error loading user:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  const token =localStorage.getItem('token')
+ 
 
-    loadUser();
-  }, []);
 
-  const login = async (email: string, password: string) => {
-    try {
-      setIsLoading(true);
-      const loggedInUser = await api.auth.login(email, password);
-      setUser(loggedInUser);
-      toast({
-        title: 'Login Successful',
-        description: `Welcome back, ${loggedInUser.name || 'User'}!`,
-      });
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to login';
-      toast({
-        variant: 'destructive',
-        title: 'Login Failed',
-        description: errorMessage,
-      });
-      throw error;
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
-  const register = async (email: string, password: string, name: string) => {
-    try {
-      setIsLoading(true);
-      const newUser = await api.auth.register(email, password, name);
-      setUser(newUser);
-      toast({
-        title: 'Registration Successful',
-        description: `Welcome, ${newUser.name}!`,
-      });
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to register';
-      toast({
-        variant: 'destructive',
-        title: 'Registration Failed',
-        description: errorMessage,
-      });
-      throw error;
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const logout = () => {
     api.auth.logout();
@@ -111,8 +58,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+
+
   return (
-    <AuthContext.Provider value={{ user, isLoading, login, register, logout, updateProfile }}>
+    <AuthContext.Provider value={{ user, isLoading,  logout, updateProfile }}>
       {children}
     </AuthContext.Provider>
   );

@@ -9,10 +9,11 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Package, User as UserIcon, ExternalLink } from 'lucide-react';
 
 const OrdersPage = () => {
-  const { user } = useAuth();
+
   const [orders, setOrders] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-
+    const token =localStorage.getItem('token') !== null 
+    const user =JSON.stringify(localStorage.getItem('user'))
   useEffect(() => {
     const fetchOrders = async () => {
       try {
@@ -31,7 +32,7 @@ const OrdersPage = () => {
     }
   }, [user]);
 
-  if (!user) {
+  if (!token) {
     return (
       <MainLayout>
         <div className="container mx-auto px-4 py-12 text-center">

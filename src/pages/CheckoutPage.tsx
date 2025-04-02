@@ -15,14 +15,15 @@ import { useToast } from '@/components/ui/use-toast';
 
 const CheckoutPage = () => {
   const { items, subtotal, clearCart } = useCart();
-  const { user } = useAuth();
+ 
   const navigate = useNavigate();
   const { toast } = useToast();
   
   const [deliveryMethods, setDeliveryMethods] = useState<DeliveryMethod[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
-  
+  const token = localStorage.getItem('token') 
+  const user = JSON.stringify(localStorage.getItem('user')) 
   // Form state
   const [formData, setFormData] = useState({
     name: user?.name || '',
@@ -42,7 +43,7 @@ const CheckoutPage = () => {
       return;
     }
 
-    // Redirect if not logged in
+    
     if (!user) {
       navigate('/login', { state: { from: '/checkout' } });
       return;
@@ -80,7 +81,7 @@ const CheckoutPage = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!user) {
+    if (!token) {
       toast({
         variant: 'destructive',
         title: 'Login Required',

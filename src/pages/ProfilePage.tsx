@@ -9,10 +9,11 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Package, User as UserIcon } from 'lucide-react';
 
 const ProfilePage = () => {
-  const { user, updateProfile } = useAuth();
+  const {  updateProfile } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
+  const token =localStorage.getItem('token') !== null 
+  const user =JSON.stringify(localStorage.getItem('user'))
   const [formData, setFormData] = useState({
     name: user?.name || '',
     email: user?.email || '',
@@ -43,7 +44,7 @@ const ProfilePage = () => {
     }
   };
 
-  if (!user) {
+  if (!token) {
     return (
       <MainLayout>
         <div className="container mx-auto px-4 py-12 text-center">

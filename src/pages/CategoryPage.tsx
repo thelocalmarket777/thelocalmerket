@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { api } from '@/lib/api';
 import { Product } from '@/types';
 import { ArrowLeft } from 'lucide-react';
+import RemoteServices from '@/RemoteService/Remoteservice';
 
 const CategoryPage = () => {
   const { category } = useParams<{ category: string }>();
@@ -15,29 +16,21 @@ const CategoryPage = () => {
 
   useEffect(() => {
     const fetchProducts = async () => {
-      try {
-        setIsLoading(true);
-        // For now, just get all products and filter by category
-        const allProducts = await api.products.getAll();
-        if (category) {
-          const filtered = allProducts.filter(
-            (p) => p.category.toLowerCase() === category.toLowerCase()
-          );
-          setProducts(filtered);
-        } else {
-          setProducts(allProducts);
-        }
-      } catch (error) {
-        console.error('Error fetching products:', error);
-      } finally {
-        setIsLoading(false);
-      }
+      setIsLoading(true);
+      await RemoteServices.filterproductCatagories(category)
+      .then(res=>{
+        console.log('ews',res.data)
+        setProducts(res.data)
+      })
+      .catch(error=>console.log('erorr product ',error))
+      .finally(()=>setIsLoading(false))
+       
+    
     };
 
     fetchProducts();
   }, [category]);
 
-  // Format category name for display
   const formatCategoryName = (category: string) => {
     return category.charAt(0).toUpperCase() + category.slice(1);
   };

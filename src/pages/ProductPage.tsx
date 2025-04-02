@@ -26,6 +26,7 @@ import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
+import RemoteServices from '@/RemoteService/Remoteservice';
 
 const ProductPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -68,19 +69,12 @@ const ProductPage = () => {
     const fetchProduct = async () => {
       if (!id) return;
       
-      try {
-        setIsLoading(true);
-        const productId = parseInt(id);
-        const fetchedProduct = await api.products.getById(productId);
-        
-        if (fetchedProduct) {
-          setProduct(fetchedProduct);
-        }
-      } catch (error) {
-        console.error('Error fetching product:', error);
-      } finally {
-        setIsLoading(false);
-      }
+      setIsLoading(true);
+      const productId = parseInt(id);
+       await RemoteServices.getById(productId)
+      .then((res)=>setProduct(res.data))
+      .catch(error=>console.log('errpr',error))
+      .finally(()=>setIsLoading(false))
     };
 
     fetchProduct();
@@ -94,7 +88,7 @@ const ProductPage = () => {
 
   const handleAddToCart = () => {
     if (product) {
-      addItem(product.id, quantity);
+      addItem(product, quantity);
       toast({
         title: "Added to cart",
         description: `${quantity} x ${product.name} added to your cart`,
@@ -211,15 +205,7 @@ const ProductPage = () => {
                           className="w-full h-[500px] object-contain"
                         />
                       )}
-                      {media.file_type === 'video' && (
-                        <video
-                          src={media.file}
-                          controls
-                          className="w-full h-[500px] object-contain"
-                        >
-                          Your browser does not support the video tag.
-                        </video>
-                      )}
+                     
                     </CarouselItem>
                   ))}
                 </CarouselContent>
@@ -254,7 +240,7 @@ const ProductPage = () => {
             </div>
             
             <div className="text-2xl font-bold text-gray-900 mb-4">
-              ${product.price.toFixed(2)}
+              ${product.price}
             </div>
             
             <div className="mb-6">

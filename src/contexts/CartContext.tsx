@@ -1,13 +1,12 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { api } from '@/lib/api';
-import { CartItem } from '@/types';
+import { CartItem, Product } from '@/types';
 import { useToast } from '@/components/ui/use-toast';
 
 interface CartContextType {
   items: CartItem[];
   isLoading: boolean;
-  addItem: (productId: number, quantity?: number) => void;
+  addItem: (product: Product, quantity?: number) => void;
   updateQuantity: (itemId: number, quantity: number) => void;
   removeItem: (itemId: number) => void;
   clearCart: () => void;
@@ -27,77 +26,45 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const subtotal = items.reduce((total, item) => total + (item.product.price * item.quantity), 0);
 
   useEffect(() => {
-    const loadCart = () => {
-      try {
-        const cartItems = api.cart.getItems();
-        setItems(cartItems);
-      } catch (error) {
-        console.error('Error loading cart:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    loadCart();
+    setIsLoading(false);
   }, []);
 
-  const addItem = (productId: number, quantity = 1) => {
-    try {
-      const updatedCart = api.cart.addItem(productId, quantity);
-      setItems(updatedCart);
+  const addItem = (product: Product, quantity = 1) => {
+    setItems(prevItems => {
+      const existingItemIndex = prevItems.findIndex(item => item.product.id === product.id);
+      let updatedCart;
+      
+      if (existingItemIndex >= 0) {
+        updatedCart = [...prevItems];
+        updatedCart[existingItemIndex].quantity += quantity;
+      } else {
+        updatedCart = [...prevItems, { id: Date.now(), product, quantity }];
+      }
+      
       toast({
         title: 'Item Added',
         description: 'Item has been added to your cart',
       });
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to add item to cart';
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: errorMessage,
-      });
-    }
+      return updatedCart;
+    });
   };
 
   const updateQuantity = (itemId: number, quantity: number) => {
-    try {
-      const updatedCart = api.cart.updateQuantity(itemId, quantity);
-      setItems(updatedCart);
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to update cart';
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: errorMessage,
-      });
-    }
+    setItems(prevItems => prevItems.map(item => 
+      item.id === itemId ? { ...item, quantity } : item
+    ));
   };
 
   const removeItem = (itemId: number) => {
-    try {
-      const updatedCart = api.cart.removeItem(itemId);
-      setItems(updatedCart);
-      toast({
-        title: 'Item Removed',
-        description: 'Item has been removed from your cart',
-      });
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to remove item from cart';
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: errorMessage,
-      });
-    }
+    setItems(prevItems => prevItems.filter(item => item.id !== itemId));
+    toast({
+      title: 'Item Removed',
+      description: 'Item has been removed from your cart',
+    });
   };
 
   const clearCart = () => {
-    try {
-      const emptyCart = api.cart.clearCart();
-      setItems(emptyCart);
-    } catch (error) {
-      console.error('Error clearing cart:', error);
-    }
+    setItems([]);
   };
 
   return (
@@ -109,7 +76,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       removeItem,
       clearCart,
       itemCount,
-      subtotal
+      subtotal,
     }}>
       {children}
     </CartContext.Provider>

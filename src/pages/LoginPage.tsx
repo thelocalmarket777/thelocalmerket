@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -6,13 +5,18 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/AuthContext';
+import { Separator } from '@/components/ui/separator';
+import { api } from '@/lib/api';
+import { User } from '@/types';
+import { useToast } from '@/components/ui/use-toast';
+import RemoteServices from '@/RemoteService/Remoteservice';
 
 const LoginPage = () => {
-  const { login, register } = useAuth();
+  
   const navigate = useNavigate();
   const location = useLocation();
   const from = location.state?.from || '/';
-  
+    const { toast } = useToast();
   // Login form state
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
@@ -24,6 +28,8 @@ const LoginPage = () => {
   const [registerEmail, setRegisterEmail] = useState('');
   const [registerPassword, setRegisterPassword] = useState('');
   const [registerConfirmPassword, setRegisterConfirmPassword] = useState('');
+  const [address, setAddress] = useState('');
+  const [phone_number, setphone_number] = useState('');
   const [isRegisterLoading, setIsRegisterLoading] = useState(false);
   const [registerError, setRegisterError] = useState<string | null>(null);
 
@@ -36,24 +42,39 @@ const LoginPage = () => {
       return;
     }
     
-    try {
-      setIsLoginLoading(true);
-      await login(loginEmail, loginPassword);
-      navigate(from);
-    } catch (error) {
+    setIsLoginLoading(true);
+    await RemoteServices.loginPost({email:loginEmail, password:loginPassword}).then((response) => {
+      if (response.status === 200) {
+        const user: User = response.data.user;
+        localStorage.setItem('user', JSON.stringify(user));
+        localStorage.setItem('token', response.data.access);
+        toast({
+          title: 'Login Successful',
+          description: `Welcome back`,
+        });
+        setTimeout(() => {
+          navigate(from);
+         }, 2000);
+      }
+    }).catch((error) => {
       console.error('Login error:', error);
-      setLoginError('Invalid email or password');
-    } finally {
+      console.error('Login error:', error);
+      toast({
+        title: "Login Failed",
+        description: "Invalid email or password. Please try again.",
+        variant: "destructive"
+      });
+    }).finally(() => {
       setIsLoginLoading(false);
-    }
+    })
   };
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setRegisterError(null);
     
-    if (!registerName || !registerEmail || !registerPassword || !registerConfirmPassword) {
-      setRegisterError('Please fill in all fields');
+    if (!registerName || !registerEmail || !registerPassword || !registerConfirmPassword || !address || !phone_number) {
+      setRegisterError('Please fill in all required fields');
       return;
     }
     
@@ -62,22 +83,37 @@ const LoginPage = () => {
       return;
     }
     
-    try {
-      setIsRegisterLoading(true);
-      await register(registerEmail, registerPassword, registerName);
-      navigate(from);
-    } catch (error) {
-      console.error('Register error:', error);
-      setRegisterError('Registration failed. Please try again.');
-    } finally {
+    await RemoteServices.register({email:registerEmail, password:registerPassword, name:registerName, address, phone_number}).then((response) => {
+      if (response.status === 201) {
+        toast({
+          title: 'Register Successful',
+          description: `Tnank you for registering`,
+        });
+       setTimeout(() => {
+        navigate(from);
+       }, 2000);
+      }
+    }).catch((error) => {
+      console.error('Login error:', error);
+      toast({
+        title: "Login Failed",
+        description: "Invalid email or password. Please try again.",
+        variant: "destructive"
+      });
+    })
+    .finally(() => {
       setIsRegisterLoading(false);
-    }
+    })
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <Link to="/" className="flex justify-center text-2xl font-bold text-brand-blue">
+        <Link to="/" className="flex justify-center items-center text-2xl font-bold text-brand-blue">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+            <polyline points="9 22 9 12 15 12 15 22"></polyline>
+          </svg>
           NexusShop
         </Link>
         <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
@@ -89,127 +125,157 @@ const LoginPage = () => {
       </div>
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
-          <Tabs defaultValue="login">
+        <div className="bg-white py-8 px-4 shadow-lg sm:rounded-xl sm:px-10 border border-gray-100">
+          <Tabs defaultValue="login" className="w-full">
             <TabsList className="grid w-full grid-cols-2 mb-6">
               <TabsTrigger value="login">Login</TabsTrigger>
               <TabsTrigger value="register">Register</TabsTrigger>
             </TabsList>
             
             <TabsContent value="login">
-              <form onSubmit={handleLogin}>
-                <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="email">Email</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      value={loginEmail}
-                      onChange={(e) => setLoginEmail(e.target.value)}
-                      placeholder="you@example.com"
-                      required
-                    />
-                  </div>
-
-                  <div>
-                    <div className="flex items-center justify-between">
-                      <Label htmlFor="password">Password</Label>
-                      <Link to="/forgot-password" className="text-sm text-brand-blue hover:underline">
-                        Forgot password?
-                      </Link>
-                    </div>
-                    <Input
-                      id="password"
-                      type="password"
-                      value={loginPassword}
-                      onChange={(e) => setLoginPassword(e.target.value)}
-                      placeholder="••••••••"
-                      required
-                    />
-                  </div>
-                  
-                  {loginError && (
-                    <div className="text-sm text-red-600">
-                      {loginError}
-                    </div>
-                  )}
-
-                  <Button 
-                    type="submit" 
-                    className="w-full" 
-                    disabled={isLoginLoading}
-                  >
-                    {isLoginLoading ? 'Signing in...' : 'Sign in'}
-                  </Button>
+              <form onSubmit={handleLogin} className="space-y-5">
+                <div>
+                  <Label htmlFor="email" className="font-medium">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={loginEmail}
+                    onChange={(e) => setLoginEmail(e.target.value)}
+                    placeholder="you@example.com"
+                    className="mt-1"
+                    required
+                  />
                 </div>
+
+                <div>
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="password" className="font-medium">Password</Label>
+                    <Link to="/forgot-password" className="text-sm text-brand-blue hover:underline">
+                      Forgot password?
+                    </Link>
+                  </div>
+                  <Input
+                    id="password"
+                    type="password"
+                    value={loginPassword}
+                    onChange={(e) => setLoginPassword(e.target.value)}
+                    placeholder="••••••••"
+                    className="mt-1"
+                    required
+                  />
+                </div>
+                
+                {loginError && (
+                  <div className="text-sm text-red-600 bg-red-50 p-2 rounded-md">
+                    {loginError}
+                  </div>
+                )}
+
+                <Button 
+                  type="submit" 
+                  className="w-full" 
+                  disabled={isLoginLoading}
+                >
+                  {isLoginLoading ? 'Signing in...' : 'Sign in'}
+                </Button>
               </form>
             </TabsContent>
             
             <TabsContent value="register">
-              <form onSubmit={handleRegister}>
-                <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="name">Full Name</Label>
-                    <Input
-                      id="name"
-                      type="text"
-                      value={registerName}
-                      onChange={(e) => setRegisterName(e.target.value)}
-                      placeholder="John Doe"
-                      required
-                    />
-                  </div>
+              <form onSubmit={handleRegister} className="space-y-4">
+                <div>
+                  <Label htmlFor="name" className="font-medium">Full Name</Label>
+                  <Input
+                    id="name"
+                    type="text"
+                    value={registerName}
+                    onChange={(e) => setRegisterName(e.target.value)}
+                    placeholder="John Doe"
+                    className="mt-1"
+                    required
+                  />
+                </div>
 
-                  <div>
-                    <Label htmlFor="register-email">Email</Label>
-                    <Input
-                      id="register-email"
-                      type="email"
-                      value={registerEmail}
-                      onChange={(e) => setRegisterEmail(e.target.value)}
-                      placeholder="you@example.com"
-                      required
-                    />
-                  </div>
+                <div>
+                  <Label htmlFor="register-email" className="font-medium">Email</Label>
+                  <Input
+                    id="register-email"
+                    type="email"
+                    value={registerEmail}
+                    onChange={(e) => setRegisterEmail(e.target.value)}
+                    placeholder="you@example.com"
+                    className="mt-1"
+                    required
+                  />
+                </div>
 
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="register-password">Password</Label>
+                    <Label htmlFor="register-password" className="font-medium">Password</Label>
                     <Input
                       id="register-password"
                       type="password"
                       value={registerPassword}
                       onChange={(e) => setRegisterPassword(e.target.value)}
                       placeholder="••••••••"
+                      className="mt-1"
                       required
                     />
                   </div>
 
                   <div>
-                    <Label htmlFor="confirm-password">Confirm Password</Label>
+                    <Label htmlFor="confirm-password" className="font-medium">Confirm Password</Label>
                     <Input
                       id="confirm-password"
                       type="password"
                       value={registerConfirmPassword}
                       onChange={(e) => setRegisterConfirmPassword(e.target.value)}
                       placeholder="••••••••"
+                      className="mt-1"
                       required
                     />
                   </div>
-                  
-                  {registerError && (
-                    <div className="text-sm text-red-600">
-                      {registerError}
-                    </div>
-                  )}
-
-                  <Button 
-                    type="submit" 
-                    className="w-full" 
-                    disabled={isRegisterLoading}
-                  >
-                    {isRegisterLoading ? 'Creating account...' : 'Create account'}
-                  </Button>
                 </div>
+
+                <div>
+                  <Label htmlFor="phone-number" className="font-medium">Phone Number</Label>
+                  <Input
+                    id="phone-number"
+                    type="tel"
+                    value={phone_number}
+                    onChange={(e) => setphone_number(e.target.value)}
+                    placeholder="(123) 456-7890"
+                    className="mt-1"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="address" className="font-medium">Address</Label>
+                  <Input
+                    id="address"
+                    type="text"
+                    value={address}
+                    onChange={(e) => setAddress(e.target.value)}
+                    placeholder="123 Main St, City, State, ZIP"
+                    className="mt-1"
+                    required
+                  />
+                </div>
+                
+                {registerError && (
+                  <div className="text-sm text-red-600 bg-red-50 p-2 rounded-md">
+                    {registerError}
+                  </div>
+                )}
+
+                <Button 
+                  type="submit" 
+                  className="w-full" 
+                  disabled={isRegisterLoading}
+                >
+                  {isRegisterLoading ? 'Creating account...' : 'Create account'}
+                </Button>
               </form>
             </TabsContent>
           </Tabs>
@@ -217,7 +283,7 @@ const LoginPage = () => {
           <div className="mt-6">
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-300" />
+                <Separator className="w-full" />
               </div>
               <div className="relative flex justify-center text-sm">
                 <span className="bg-white px-2 text-gray-500">Or continue with</span>

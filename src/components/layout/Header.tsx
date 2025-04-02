@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -14,12 +13,38 @@ import {
 import { useAuth } from '@/contexts/AuthContext';
 import { useCart } from '@/contexts/CartContext';
 import { cn } from '@/lib/utils';
+import { useToast } from '@/components/ui/use-toast';
 
 const Header = () => {
-  const { user, logout } = useAuth();
   const { itemCount } = useCart();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
+  const user = JSON.parse(localStorage.getItem('user'));
+  const { toast } = useToast();
   
+  const logout = () => {
+    localStorage.clear();
+    setProfileDropdownOpen(false);
+    toast({
+      title: 'Logged Out',
+      description: 'You have been successfully logged out',
+    });
+  };
+
+  // Close dropdown when clicking outside
+  React.useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (profileDropdownOpen && !event.target.closest('.profile-dropdown-container')) {
+        setProfileDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [profileDropdownOpen]);
+
   const categories = [
     { name: 'Electronics', path: '/category/electronics' },
     { name: 'Furniture', path: '/category/furniture' },
@@ -67,32 +92,46 @@ const Header = () => {
               </Button>
             </Link>
             {user ? (
-              <div className="relative group">
-                <Link to="/profile">
-                  <Button variant="ghost" size="icon">
-                    <User size={20} />
-                  </Button>
-                </Link>
-                <div className="absolute right-0 mt-2 w-48 bg-white shadow-lg rounded-md hidden group-hover:block">
-                  <div className="py-2 px-4 border-b">
-                    <p className="text-sm font-medium">Hello, {user.name || 'User'}</p>
-                    <p className="text-xs text-gray-500 truncate">{user.email}</p>
+              <div className="relative profile-dropdown-container">
+                <Button 
+                  variant="ghost" 
+                  size="icon"
+                  onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
+                  aria-expanded={profileDropdownOpen}
+                  aria-haspopup="true"
+                >
+                  <User size={20} />
+                </Button>
+                {profileDropdownOpen && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white shadow-lg rounded-md border border-gray-200 z-50">
+                    <div className="py-2 px-4 border-b">
+                      <p className="text-sm font-medium">Hello, {user?.name || 'User'}</p>
+                      <p className="text-xs text-gray-500 truncate">{user?.email}</p>
+                    </div>
+                    <div className="py-1">
+                      <Link 
+                        to="/profile" 
+                        className="block px-4 py-2 text-sm hover:bg-gray-100"
+                        onClick={() => setProfileDropdownOpen(false)}
+                      >
+                        My Profile
+                      </Link>
+                      <Link 
+                        to="/orders" 
+                        className="block px-4 py-2 text-sm hover:bg-gray-100"
+                        onClick={() => setProfileDropdownOpen(false)}
+                      >
+                        My Orders
+                      </Link>
+                      <button 
+                        onClick={logout}
+                        className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
+                      >
+                        Logout
+                      </button>
+                    </div>
                   </div>
-                  <div className="py-1">
-                    <Link to="/profile" className="block px-4 py-2 text-sm hover:bg-gray-100">
-                      My Profile
-                    </Link>
-                    <Link to="/orders" className="block px-4 py-2 text-sm hover:bg-gray-100">
-                      My Orders
-                    </Link>
-                    <button 
-                      onClick={logout}
-                      className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
-                    >
-                      Logout
-                    </button>
-                  </div>
-                </div>
+                )}
               </div>
             ) : (
               <Link to="/login">

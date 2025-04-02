@@ -120,7 +120,7 @@ const mockDeliveryMethods: DeliveryMethod[] = [
 
 // Local storage keys
 const CART_STORAGE_KEY = "nexus_shop_cart";
-const USER_STORAGE_KEY = "nexus_shop_user";
+const USER_STORAGE_KEY = "user";
 const ORDERS_STORAGE_KEY = "nexus_shop_orders";
 
 // Helper to get cart from local storage
@@ -176,47 +176,9 @@ export const api = {
       return userString ? JSON.parse(userString) : null;
     },
     
-    login: async (email: string, password: string): Promise<User> => {
-      await new Promise(resolve => setTimeout(resolve, 800));
-      
-      // For demo purposes, simply validate that something was entered
-      if (!email || !password) {
-        throw new Error("Email and password are required");
-      }
-      
-      // Mock successful login
-      const user: User = {
-        id: 1,
-        email,
-        name: email.split("@")[0],
-        address: "123 Main St, Anytown, USA",
-        phone_number: "555-123-4567",
-        created_at: new Date().toISOString()
-      };
-      
-      localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user));
-      return user;
-    },
+  
     
-    register: async (email: string, password: string, name: string): Promise<User> => {
-      await new Promise(resolve => setTimeout(resolve, 800));
-      
-      // Simple validation
-      if (!email || !password || !name) {
-        throw new Error("All fields are required");
-      }
-      
-      // Mock successful registration
-      const user: User = {
-        id: Date.now(),
-        email,
-        name,
-        created_at: new Date().toISOString()
-      };
-      
-      localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user));
-      return user;
-    },
+
     
     logout: () => {
       localStorage.removeItem(USER_STORAGE_KEY);
@@ -241,32 +203,32 @@ export const api = {
       return getStoredCart();
     },
     
-    addItem: (productId: number, quantity: number = 1): CartItem[] => {
-      const cart = getStoredCart();
-      const product = mockProducts.find(p => p.id === productId);
+    // addItem: (productId: number, quantity: number = 1): CartItem[] => {
+    //   const cart = getStoredCart();
+    //   const product = Product.find(p => p.id === productId);
       
-      if (!product) {
-        throw new Error("Product not found");
-      }
+    //   if (!product) {
+    //     throw new Error("Product not found");
+    //   }
       
-      // Check if product already in cart
-      const existingItemIndex = cart.findIndex(item => item.product.id === productId);
+    //   // Check if product already in cart
+    //   const existingItemIndex = cart.findIndex(item => item.product.id === productId);
       
-      if (existingItemIndex >= 0) {
-        // Update quantity if already in cart
-        cart[existingItemIndex].quantity += quantity;
-      } else {
-        // Add new item to cart
-        cart.push({
-          id: Date.now(),
-          product,
-          quantity
-        });
-      }
+    //   if (existingItemIndex >= 0) {
+    //     // Update quantity if already in cart
+    //     cart[existingItemIndex].quantity += quantity;
+    //   } else {
+    //     // Add new item to cart
+    //     cart.push({
+    //       id: Date.now(),
+    //       product,
+    //       quantity
+    //     });
+    //   }
       
-      saveCart(cart);
-      return cart;
-    },
+    //   saveCart(cart);
+    //   return cart;
+    // },
     
     updateQuantity: (itemId: number, quantity: number): CartItem[] => {
       if (quantity <= 0) {
