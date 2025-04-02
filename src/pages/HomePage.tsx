@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import MainLayout from '@/components/layout/MainLayout';
@@ -13,7 +12,7 @@ import {
   ShieldCheck, 
   Clock,
   Sparkles,
-  StarIcon,
+  Star,
   TrendingUp
 } from 'lucide-react';
 import { 
@@ -76,7 +75,6 @@ const HomePage = () => {
     },
   ];
 
-  // Featured collections
   const collections = [
     {
       name: "Summer Collection",
@@ -92,7 +90,6 @@ const HomePage = () => {
     }
   ];
 
-  // Promotional banners
   const promotions = [
     {
       title: "Get 20% off",
@@ -120,7 +117,6 @@ const HomePage = () => {
     }
   ];
 
-  // Testimonials
   const testimonials = [
     {
       name: "Sarah J.",
@@ -144,9 +140,8 @@ const HomePage = () => {
 
   return (
     <MainLayout>
-      {/* Hero Carousel Section */}
       <section className="relative bg-gray-100">
-        <Carousel className="w-full" autoplay={true} opts={{ loop: true }}>
+        <Carousel className="w-full" opts={{ loop: true }}>
           <CarouselContent>
             <CarouselItem>
               <div className="container mx-auto px-4 py-16 md:py-24">
@@ -244,7 +239,6 @@ const HomePage = () => {
         </Carousel>
       </section>
 
-      {/* Benefits Bar */}
       <section className="py-6 bg-gray-50 border-y border-gray-200">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-center">
@@ -272,7 +266,6 @@ const HomePage = () => {
         </div>
       </section>
 
-      {/* Categories Section */}
       <section className="py-12 md:py-16 bg-white">
         <div className="container mx-auto px-4">
           <div className="flex justify-between items-center mb-8">
@@ -307,7 +300,6 @@ const HomePage = () => {
         </div>
       </section>
 
-      {/* New Arrivals Section */}
       <section className="py-12 md:py-16 bg-gray-50">
         <div className="container mx-auto px-4">
           <div className="flex justify-between items-center mb-8">
@@ -349,7 +341,6 @@ const HomePage = () => {
         </div>
       </section>
 
-      {/* Featured Collections */}
       <section className="py-12 md:py-16 bg-white">
         <div className="container mx-auto px-4">
           <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-8 text-center">Featured Collections</h2>
@@ -379,7 +370,6 @@ const HomePage = () => {
         </div>
       </section>
 
-      {/* Promotional Banners */}
       <section className="py-12 md:py-16 bg-gray-50">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -403,7 +393,6 @@ const HomePage = () => {
         </div>
       </section>
 
-      {/* Best Sellers Section */}
       <section className="py-12 md:py-16 bg-white">
         <div className="container mx-auto px-4">
           <div className="flex justify-between items-center mb-8">
@@ -437,7 +426,6 @@ const HomePage = () => {
         </div>
       </section>
 
-      {/* Testimonials */}
       <section className="py-12 md:py-16 bg-gray-50">
         <div className="container mx-auto px-4">
           <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2 text-center">What Our Customers Say</h2>
@@ -471,7 +459,6 @@ const HomePage = () => {
         </div>
       </section>
 
-      {/* Newsletter Section */}
       <section className="py-12 md:py-16 bg-brand-blue text-white">
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-2xl md:text-3xl font-bold mb-4">Get 10% Off Your First Order</h2>

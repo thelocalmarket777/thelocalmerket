@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import MainLayout from '@/components/layout/MainLayout';
@@ -38,7 +37,6 @@ const ProductPage = () => {
   const { addItem } = useCart();
   const { toast } = useToast();
 
-  // Mock reviews data (in a real app, this would come from an API)
   const [reviews, setReviews] = useState([
     {
       id: 1,
@@ -108,7 +106,6 @@ const ProductPage = () => {
     e.preventDefault();
     if (!reviewText.trim()) return;
     
-    // In a real app, you would send this to an API
     const newReview = {
       id: reviews.length + 1,
       user: 'You',
@@ -128,7 +125,6 @@ const ProductPage = () => {
     });
   };
 
-  // Render loading state
   if (isLoading) {
     return (
       <MainLayout>
@@ -148,7 +144,6 @@ const ProductPage = () => {
     );
   }
 
-  // Render if product not found
   if (!product) {
     return (
       <MainLayout>
@@ -163,7 +158,6 @@ const ProductPage = () => {
     );
   }
 
-  // Generate stars based on rating
   const renderRating = (rating: string | number | undefined, size = 18) => {
     if (!rating) return null;
     
@@ -184,7 +178,6 @@ const ProductPage = () => {
     );
   };
 
-  // Mock media for carousel
   const mediaItems: ProductMedia[] = product.media || [
     { id: 1, product_id: product.id, file: product.imageUrl, file_type: 'image', description: 'Main product image' },
     { id: 2, product_id: product.id, file: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e', file_type: 'image', description: 'Product from another angle' },
@@ -194,7 +187,6 @@ const ProductPage = () => {
   return (
     <MainLayout>
       <div className="container mx-auto px-4 py-8">
-        {/* Breadcrumb navigation */}
         <div className="mb-6">
           <Link
             to="/"
@@ -206,10 +198,9 @@ const ProductPage = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {/* Product Media Carousel */}
           <div className="bg-gray-50 rounded-lg overflow-hidden">
             {mediaItems.length > 1 ? (
-              <Carousel className="w-full" opts={{ loop: true, align: "start" }} autoplay={true}>
+              <Carousel className="w-full" opts={{ loop: true, align: "start" }}>
                 <CarouselContent>
                   {mediaItems.map((media, index) => (
                     <CarouselItem key={index}>
@@ -255,7 +246,6 @@ const ProductPage = () => {
             )}
           </div>
 
-          {/* Product Details */}
           <div>
             <h1 className="text-3xl font-bold text-gray-900 mb-2">{product.name}</h1>
             
@@ -271,7 +261,6 @@ const ProductPage = () => {
               <p className="text-gray-700">{product.description}</p>
             </div>
 
-            {/* Stock status */}
             <div className="mb-6">
               <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                 product.stock > 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
@@ -280,10 +269,9 @@ const ProductPage = () => {
               </span>
             </div>
             
-            {/* Quantity selector and add to cart */}
-            {product.stock > 0 && (
-              <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Quantity</label>
+            <div className="mb-6">
+              <div className="flex items-center gap-2 mb-2">
+                <label className="text-sm font-medium">Quantity</label>
                 <div className="flex items-center">
                   <button
                     onClick={() => handleQuantityChange(quantity - 1)}
@@ -309,7 +297,7 @@ const ProductPage = () => {
                   </button>
                 </div>
               </div>
-            )}
+            </div>
             
             <div className="flex flex-wrap gap-4 mb-8">
               <Button
@@ -328,7 +316,6 @@ const ProductPage = () => {
               </Button>
             </div>
 
-            {/* Shipping Information */}
             <div className="border-t border-gray-200 pt-6 space-y-4">
               <div className="flex items-start gap-3">
                 <Truck className="text-gray-400 mt-0.5" size={20} />
@@ -349,11 +336,9 @@ const ProductPage = () => {
           </div>
         </div>
 
-        {/* Reviews Section */}
         <div className="mt-16">
           <h2 className="text-2xl font-bold mb-8">Customer Reviews</h2>
           
-          {/* Write a review form */}
           <Card className="mb-8">
             <CardHeader>
               <h3 className="text-xl font-semibold">Write a Review</h3>
@@ -397,7 +382,6 @@ const ProductPage = () => {
             </CardContent>
           </Card>
           
-          {/* Reviews list */}
           <div className="space-y-6">
             <ScrollArea className="h-[600px] rounded-md">
               {reviews.length > 0 ? (
