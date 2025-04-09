@@ -3,17 +3,17 @@ import { Link } from 'react-router-dom';
 import MainLayout from '@/components/layout/MainLayout';
 import ProductCard from '@/components/products/ProductCard';
 import { Button } from '@/components/ui/button';
-import { api } from '@/lib/api';
+
 import { Product } from '@/types';
 import { 
   ChevronRight, 
-  Truck, 
-  RotateCw, 
-  ShieldCheck, 
-  Clock,
-  Sparkles,
+  Heart,
+  Package,
+  Shield,
+  Headphones,
+  ArrowRight,
   Star,
-  TrendingUp
+  Clock
 } from 'lucide-react';
 import { 
   Carousel,
@@ -54,67 +54,40 @@ const HomePage = () => {
 
   const categories = [
     { 
-      name: 'Electronics', 
-      image: 'https://images.unsplash.com/photo-1588508065123-287b28e013da?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1160&q=80',
-      path: '/category/electronics'
+      name: 'Book', 
+      description: 'Explore our collection of books',
+      icon: 'book',
+     
+      color: 'bg-blue-100', 
+      textColor: 'text-blue-800',
+      path: '/category/Book'
     },
     { 
-      name: 'Furniture', 
-      image: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1160&q=80',
-      path: '/category/furniture'
+      name: 'Plants',
+      description: 'Bring nature indoors with our plants', 
+      
+      icon: 'sofa',
+      color: 'bg-green-100',
+      textColor: 'text-amber-800',
+      path: '/category/Plants'
     },
     { 
-      name: 'Kitchen', 
-      image: 'https://images.unsplash.com/photo-1590794056226-79ef3a8147e1?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1160&q=80',
-      path: '/category/kitchen'
+      name: 'Handicrafts',
+      description: 'Unique handicrafts from local artisans', 
+      
+      icon: 'handcuffs',
+      color: 'bg-green-100',
+      textColor: 'text-green-800',
+      path: '/category/Handicrafts'
     },
     { 
       name: 'Home Decor', 
-      image: 'https://images.unsplash.com/photo-1513716875835-b4b71893e905?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1160&q=80',
-      path: '/category/home'
+      description: 'Beautiful accents for your space',
+      icon: 'lamp',
+      color: 'bg-purple-100',
+      textColor: 'text-purple-800',
+      path: '/category/homedecor'
     },
-  ];
-
-  const collections = [
-    {
-      name: "Summer Collection",
-      description: "Bright and colorful items for summer days",
-      image: "https://images.unsplash.com/photo-1503455637927-730bce8583c0?ixlib=rb-4.0.3&auto=format&fit=crop&w=1160&q=80",
-      path: "/category/summer"
-    },
-    {
-      name: "Autumn Essentials",
-      description: "Warm and cozy products for the autumn season",
-      image: "https://images.unsplash.com/photo-1544985361-b420d7a77140?ixlib=rb-4.0.3&auto=format&fit=crop&w=1160&q=80",
-      path: "/category/autumn"
-    }
-  ];
-
-  const promotions = [
-    {
-      title: "Get 20% off",
-      subtitle: "on all electronic items",
-      cta: "Shop Now",
-      path: "/category/electronics",
-      bgColor: "bg-blue-600",
-      textColor: "text-white"
-    },
-    {
-      title: "Free Shipping",
-      subtitle: "on orders over $100",
-      cta: "Learn More",
-      path: "/shipping",
-      bgColor: "bg-purple-600",
-      textColor: "text-white"
-    },
-    {
-      title: "New Arrivals",
-      subtitle: "Check out our latest products",
-      cta: "Discover",
-      path: "/new-arrivals",
-      bgColor: "bg-amber-500",
-      textColor: "text-white"
-    }
   ];
 
   const testimonials = [
@@ -138,140 +111,155 @@ const HomePage = () => {
     }
   ];
 
+  const featuredCollections = [
+    {
+      title: "Wood Craft",
+      description: "Handcrafted wooden items for your home",
+      image: "https://upload.wikimedia.org/wikipedia/commons/7/78/Wood_Craft_%2CNepal.JPG",
+      color: " bg-gradient-to-r from-pink-400 to-purple-500",
+      path: "/category/handcraft"
+    },
+    {
+      title: "Tibetan thangka ",
+      description: "Artistic and spiritual pieces for your home",
+      image: "https://upload.wikimedia.org/wikipedia/commons/2/27/Tibetan_thangka_from_AD_1500%2C_Mahakala%2C_Protector_of_the_Tent%2C_Central_Tibet._Distemper_on_cloth-_%28cropped%29.jpg",
+      color: "bg-gradient-to-r from-green-400 to-blue-500",
+      path: "/category/Painting"
+    }
+  ];
+
   return (
     <MainLayout>
-      <section className="relative bg-gray-100">
-        <Carousel className="w-full" opts={{ loop: true }}>
-          <CarouselContent>
-            <CarouselItem>
-              <div className="container mx-auto px-4 py-16 md:py-24">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
-                  <div>
-                    <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
-                      Discover Quality Products for Your Lifestyle
-                    </h1>
-                    <p className="text-lg text-gray-600 mb-8">
-                      Shop our curated collection of premium products designed to enhance your everyday living experience.
-                    </p>
-                    <div className="flex flex-wrap gap-4">
-                      <Button size="lg" asChild>
-                        <Link to="/shop">Shop Now</Link>
-                      </Button>
-                      <Button size="lg" variant="outline" asChild>
-                        <Link to="/category/new-arrivals">New Arrivals</Link>
-                      </Button>
-                    </div>
-                  </div>
-                  <div className="hidden lg:block">
-                    <img 
-                      src="https://images.unsplash.com/photo-1605826832916-d0a401244df1?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1160&q=80" 
-                      alt="Home decorative items"
-                      className="rounded-lg shadow-lg"
-                    />
-                  </div>
-                </div>
-              </div>
-            </CarouselItem>
-            <CarouselItem>
-              <div className="container mx-auto px-4 py-16 md:py-24">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
-                  <div>
-                    <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
-                      Summer Collection 2023
-                    </h1>
-                    <p className="text-lg text-gray-600 mb-8">
-                      Refresh your space with our vibrant summer collection, featuring bright colors and lightweight materials.
-                    </p>
-                    <div className="flex flex-wrap gap-4">
-                      <Button size="lg" asChild>
-                        <Link to="/category/summer">View Collection</Link>
-                      </Button>
-                    </div>
-                  </div>
-                  <div className="hidden lg:block">
-                    <img 
-                      src="https://images.unsplash.com/photo-1519710164239-da123dc03ef4?ixlib=rb-4.0.3&auto=format&fit=crop&w=1160&q=80" 
-                      alt="Summer collection"
-                      className="rounded-lg shadow-lg"
-                    />
-                  </div>
-                </div>
-              </div>
-            </CarouselItem>
-            <CarouselItem>
-              <div className="container mx-auto px-4 py-16 md:py-24">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
-                  <div>
-                    <span className="px-3 py-1 text-sm font-medium bg-red-100 text-red-800 rounded-full mb-4 inline-block">Limited Time</span>
-                    <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
-                      Flash Sale: 30% Off Electronics
-                    </h1>
-                    <p className="text-lg text-gray-600 mb-8">
-                      Upgrade your tech with our premium electronics. Sale ends in 3 days!
-                    </p>
-                    <div className="flex flex-wrap gap-4">
-                      <Button size="lg" className="bg-red-600 hover:bg-red-700" asChild>
-                        <Link to="/category/electronics">Shop Sale</Link>
-                      </Button>
-                    </div>
-                  </div>
-                  <div className="hidden lg:block">
-                    <img 
-                      src="https://images.unsplash.com/photo-1550009158-9ebf69173e03?ixlib=rb-4.0.3&auto=format&fit=crop&w=1160&q=80" 
-                      alt="Electronics on sale"
-                      className="rounded-lg shadow-lg"
-                    />
-                  </div>
-                </div>
-              </div>
-            </CarouselItem>
-          </CarouselContent>
-          <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-1 py-2">
-            {[0, 1, 2].map((_, index) => (
-              <div
-                key={index}
-                className={`h-2 w-2 rounded-full transition-colors ${
-                  index === 0 ? "bg-primary" : "bg-white/50"
-                }`}
-              />
-            ))}
-          </div>
-        </Carousel>
-      </section>
-
-      <section className="py-6 bg-gray-50 border-y border-gray-200">
-        <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-center">
-            <div className="flex flex-col items-center p-3">
-              <Truck size={24} className="text-brand-blue mb-2" />
-              <h3 className="font-medium">Free Shipping</h3>
-              <p className="text-sm text-gray-500">On orders over $50</p>
-            </div>
-            <div className="flex flex-col items-center p-3">
-              <RotateCw size={24} className="text-brand-blue mb-2" />
-              <h3 className="font-medium">Easy Returns</h3>
-              <p className="text-sm text-gray-500">30-day return policy</p>
-            </div>
-            <div className="flex flex-col items-center p-3">
-              <ShieldCheck size={24} className="text-brand-blue mb-2" />
-              <h3 className="font-medium">Secure Payments</h3>
-              <p className="text-sm text-gray-500">Protected by encryption</p>
-            </div>
-            <div className="flex flex-col items-center p-3">
-              <Clock size={24} className="text-brand-blue mb-2" />
-              <h3 className="font-medium">24/7 Support</h3>
-              <p className="text-sm text-gray-500">We're here to help</p>
+      {/* Hero Section with Video Background */}
+      <section className="relative overflow-hidden bg-slate-500 text-white">
+        <div className="absolute inset-0 z-0 opacity-60">
+          <div className="absolute inset-0   z-10"></div>
+          <img 
+            src="https://upload.wikimedia.org/wikipedia/commons/7/78/Wood_Craft_%2CNepal.JPG" 
+            alt="Modern lifestyle" 
+            className="object-cover w-full h-full"
+          />
+        </div>
+        
+        <div className="container relative z-10 mx-auto px-4 py-24 md:py-32">
+          <div className="max-w-xl">
+            <span className="inline-block px-4 py-1 mb-6 text-sm font-medium rounded-full bg-white/20 backdrop-blur-sm">
+              Elevate Your Lifestyle
+            </span>
+            <h1 className="text-4xl md:text-6xl font-bold mb-6 leading-tight">
+              Curated Designs for <br/>
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-purple-500">
+                Modern Living
+              </span>
+            </h1>
+            <p className="text-lg text-white/90 mb-8 max-w-lg">
+              Discover thoughtfully crafted products that blend beauty, functionality, and sustainability for your everyday needs.
+            </p>
+            <div className="flex flex-wrap gap-4">
+              <Button size="lg" className="bg-white text-black hover:bg-white/90 hover:text-black px-8" asChild>
+                <Link to="/All">Explore Collection</Link>
+              </Button>
+              {/* <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10" asChild>
+                <Link to="/category/new">New Season</Link>
+              </Button> */}
             </div>
           </div>
         </div>
       </section>
 
-      <section className="py-12 md:py-16 bg-white">
+      {/* Value Props */}
+      <section className="py-12 bg-white">
         <div className="container mx-auto px-4">
-          <div className="flex justify-between items-center mb-8">
-            <h2 className="text-2xl md:text-3xl font-bold text-gray-900">Shop by Category</h2>
-            <Link to="/shop" className="text-brand-blue flex items-center hover:underline">
-              View All
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+            <div className="flex gap-4 items-start">
+              <div className="p-3 rounded-full bg-indigo-100 text-indigo-600">
+                <Package size={24} />
+              </div>
+              <div>
+                <h3 className="font-semibold mb-1">Premium Quality</h3>
+                <p className="text-gray-600 text-sm">Curated selection of durable, high-quality items</p>
+              </div>
+            </div>
+            <div className="flex gap-4 items-start">
+              <div className="p-3 rounded-full bg-amber-100 text-amber-600">
+                <Heart size={24} />
+              </div>
+              <div>
+                <h3 className="font-semibold mb-1">Made with Care</h3>
+                <p className="text-gray-600 text-sm">Ethically sourced materials and responsible manufacturing</p>
+              </div>
+            </div>
+            <div className="flex gap-4 items-start">
+              <div className="p-3 rounded-full bg-emerald-100 text-emerald-600">
+                <Shield size={24} />
+              </div>
+              <div>
+                <h3 className="font-semibold mb-1">Satisfaction Guarantee</h3>
+                <p className="text-gray-600 text-sm">30-day returns and 1-year warranty on all products</p>
+              </div>
+            </div>
+            <div className="flex gap-4 items-start">
+              <div className="p-3 rounded-full bg-rose-100 text-rose-600">
+                <Headphones size={24} />
+              </div>
+              <div>
+                <h3 className="font-semibold mb-1">Expert Support</h3>
+                <p className="text-gray-600 text-sm">Our team is available 7 days a week to assist you</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Featured Collections */}
+      <section className="py-16 bg-gray-50">
+        <div className="container mx-auto px-4">
+          <div className="mb-10 text-center">
+            <h2 className="text-3xl font-bold mb-3">Featured Collections</h2>
+            <p className="text-gray-600 max-w-2xl mx-auto">
+              Explore our carefully curated collections designed to enhance your lifestyle
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {featuredCollections.map((collection, index) => (
+              <Link 
+                key={index}
+                to={collection.path} 
+                className="group relative overflow-hidden rounded-xl shadow-lg h-80"
+              >
+                <div className={`absolute inset-0  ${collection.color}  opacity-90 transition-opacity duration-300 group-hover:opacity-100`}></div>
+                <img 
+                  src={collection.image} 
+                  alt={collection.title}
+                  className="absolute inset-0 w-full h-full object-cover mix-blend-overlay"
+                />
+                <div className="absolute inset-0 flex flex-col justify-between p-8 text-white z-10">
+                  <div>
+                    <h3 className="text-2xl font-bold mb-2">{collection.title}</h3>
+                    <p className="text-white/90">{collection.description}</p>
+                  </div>
+                  <div className="flex items-center gap-2 font-medium group-hover:gap-3 transition-all duration-300">
+                    Discover Collection
+                    <ArrowRight size={16} className="transition-transform duration-300 group-hover:translate-x-1" />
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Categories */}
+      <section className="py-16 bg-white">
+        <div className="container mx-auto px-4">
+          <div className="flex justify-between items-end mb-10">
+            <div>
+              <h2 className="text-3xl font-bold mb-2">Shop by Category</h2>
+              <p className="text-gray-600">Find exactly what you're looking for</p>
+            </div>
+            <Link to="/shop" className="text-indigo-600 font-medium flex items-center hover:text-indigo-800 transition-colors">
+              View All Categories
               <ChevronRight size={16} className="ml-1" />
             </Link>
           </div>
@@ -281,18 +269,17 @@ const HomePage = () => {
               <Link 
                 key={category.name}
                 to={category.path} 
-                className="group relative overflow-hidden rounded-lg shadow-sm hover:shadow-md transition-shadow"
+                className={`${category.color} ${category.textColor} p-8 rounded-xl hover:shadow-lg transition-all duration-300 group`}
               >
-                <div className="aspect-w-1 aspect-h-1">
-                  <img 
-                    src={category.image} 
-                    alt={category.name}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
-                </div>
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
-                <div className="absolute bottom-0 left-0 right-0 p-4">
-                  <h3 className="text-xl font-semibold text-white">{category.name}</h3>
+                <div className="flex flex-col h-full justify-between">
+                  <div>
+                    <h3 className="text-xl font-bold mb-2">{category.name}</h3>
+                    <p className="opacity-80 mb-8">{category.description}</p>
+                  </div>
+                  <div className="flex items-center gap-2 font-medium group-hover:gap-3 transition-all duration-300">
+                    Explore
+                    <ArrowRight size={16} className="transition-transform duration-300 group-hover:translate-x-1" />
+                  </div>
                 </div>
               </Link>
             ))}
@@ -300,14 +287,15 @@ const HomePage = () => {
         </div>
       </section>
 
-      <section className="py-12 md:py-16 bg-gray-50">
+      {/* New Arrivals */}
+      <section className="py-16 bg-gray-50">
         <div className="container mx-auto px-4">
-          <div className="flex justify-between items-center mb-8">
-            <div className="flex items-center gap-2">
-              <Sparkles size={20} className="text-brand-blue" />
-              <h2 className="text-2xl md:text-3xl font-bold text-gray-900">New Arrivals</h2>
+          <div className="flex justify-between items-end mb-10">
+            <div>
+              <span className="text-sm font-medium text-indigo-600 uppercase tracking-wider mb-2 block">Just In</span>
+              <h2 className="text-3xl font-bold">New Arrivals</h2>
             </div>
-            <Link to="/category/new-arrivals" className="text-brand-blue flex items-center hover:underline">
+            <Link to="/category/new-arrivals" className="text-indigo-600 font-medium flex items-center hover:text-indigo-800 transition-colors">
               View All
               <ChevronRight size={16} className="ml-1" />
             </Link>
@@ -316,8 +304,8 @@ const HomePage = () => {
           {isLoading ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {[...Array(4)].map((_, index) => (
-                <div key={index} className="rounded-lg border border-gray-200 bg-white p-4 h-[320px] animate-pulse">
-                  <div className="h-[200px] bg-gray-200 rounded-md mb-4"></div>
+                <div key={index} className="rounded-lg bg-white p-4 h-64 animate-pulse">
+                  <div className="h-40 bg-gray-200 rounded-md mb-4"></div>
                   <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
                   <div className="h-4 bg-gray-200 rounded w-1/2"></div>
                 </div>
@@ -334,73 +322,22 @@ const HomePage = () => {
                   </CarouselItem>
                 ))}
               </CarouselContent>
-              <CarouselPrevious className="-left-4 bg-white" />
-              <CarouselNext className="-right-4 bg-white" />
+              <CarouselPrevious className="-left-4 bg-white shadow-md hover:bg-gray-50" />
+              <CarouselNext className="-right-4 bg-white shadow-md hover:bg-gray-50" />
             </Carousel>
           )}
         </div>
       </section>
 
-      <section className="py-12 md:py-16 bg-white">
+      {/* Best Sellers */}
+      <section className="py-16 bg-white">
         <div className="container mx-auto px-4">
-          <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-8 text-center">Featured Collections</h2>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {collections.map((collection, index) => (
-              <Link 
-                to={collection.path}
-                key={index}
-                className="relative overflow-hidden rounded-xl group"
-              >
-                <img 
-                  src={collection.image} 
-                  alt={collection.name}
-                  className="w-full h-80 object-cover group-hover:scale-105 transition-transform duration-500"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent flex flex-col justify-end p-6">
-                  <h3 className="text-2xl font-bold text-white mb-2">{collection.name}</h3>
-                  <p className="text-white/80 mb-4">{collection.description}</p>
-                  <Button size="sm" className="self-start bg-white text-gray-900 hover:bg-gray-100">
-                    Discover
-                  </Button>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="py-12 md:py-16 bg-gray-50">
-        <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {promotions.map((promo, index) => (
-              <div 
-                key={index} 
-                className={`${promo.bgColor} ${promo.textColor} rounded-lg p-6 shadow-md hover:shadow-lg transition-shadow`}
-              >
-                <h3 className="text-xl font-bold mb-1">{promo.title}</h3>
-                <p className="mb-4 opacity-90">{promo.subtitle}</p>
-                <Button 
-                  asChild
-                  variant="outline" 
-                  className="border-current text-current hover:bg-white/10"
-                >
-                  <Link to={promo.path}>{promo.cta}</Link>
-                </Button>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="py-12 md:py-16 bg-white">
-        <div className="container mx-auto px-4">
-          <div className="flex justify-between items-center mb-8">
-            <div className="flex items-center gap-2">
-              <TrendingUp size={20} className="text-brand-blue" />
-              <h2 className="text-2xl md:text-3xl font-bold text-gray-900">Best Sellers</h2>
+          <div className="flex justify-between items-end mb-10">
+            <div>
+              <span className="text-sm font-medium text-indigo-600 uppercase tracking-wider mb-2 block">Popular Items</span>
+              <h2 className="text-3xl font-bold">Best Sellers</h2>
             </div>
-            <Link to="/category/best-sellers" className="text-brand-blue flex items-center hover:underline">
+            <Link to="/category/best-sellers" className="text-indigo-600 font-medium flex items-center hover:text-indigo-800 transition-colors">
               View All
               <ChevronRight size={16} className="ml-1" />
             </Link>
@@ -409,8 +346,8 @@ const HomePage = () => {
           {isLoading ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {[...Array(4)].map((_, index) => (
-                <div key={index} className="rounded-lg border border-gray-200 bg-white p-4 h-[320px] animate-pulse">
-                  <div className="h-[200px] bg-gray-200 rounded-md mb-4"></div>
+                <div key={index} className="rounded-lg bg-white p-4 h-64 animate-pulse">
+                  <div className="h-40 bg-gray-200 rounded-md mb-4"></div>
                   <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
                   <div className="h-4 bg-gray-200 rounded w-1/2"></div>
                 </div>
@@ -426,30 +363,105 @@ const HomePage = () => {
         </div>
       </section>
 
-      <section className="py-12 md:py-16 bg-gray-50">
+      {/* Local Nepali Products */}
+      <section className="py-16 bg-white">
         <div className="container mx-auto px-4">
-          <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2 text-center">What Our Customers Say</h2>
-          <p className="text-gray-600 mb-10 text-center max-w-2xl mx-auto">
-            Don't just take our word for it - see what our valued customers have to say about their shopping experience.
-          </p>
+          <div className="mb-10 text-center">
+            <h2 className="text-3xl font-bold mb-3">Local Treasures of Nepal</h2>
+            <p className="text-gray-600 max-w-2xl mx-auto">
+              Discover the best of Nepal with our exclusive range of local products. Explore beautifully crafted books, artisanal crafting items, and traditional banbo products that celebrate Nepali heritage and culture.
+            </p>
+          </div>
+          {/* <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="rounded-lg bg-white shadow hover:shadow-md transition-all duration-300 p-6">
+              <img src="/api/placeholder/600/400" alt="Nepali Heritage Book" className="w-full h-40 object-cover rounded-md mb-4" />
+              <h3 className="text-xl font-bold mb-2">Nepali Heritage Book</h3>
+              <p className="text-gray-600 mb-4">
+                Explore the rich history and culture of Nepal through beautifully illustrated and thoughtfully written stories.
+              </p>
+              <Button className="bg-indigo-600 text-white hover:bg-indigo-500">Learn More</Button>
+            </div>
+            <div className="rounded-lg bg-white shadow hover:shadow-md transition-all duration-300 p-6">
+              <img src="/api/placeholder/600/400" alt="Traditional Crafting" className="w-full h-40 object-cover rounded-md mb-4" />
+              <h3 className="text-xl font-bold mb-2">Traditional Crafting</h3>
+              <p className="text-gray-600 mb-4">
+                Handcrafted items that showcase the artistry of local Nepali craftsmen, blending tradition with modern design.
+              </p>
+              <Button className="bg-indigo-600 text-white hover:bg-indigo-500">Discover More</Button>
+            </div>
+            <div className="rounded-lg bg-white shadow hover:shadow-md transition-all duration-300 p-6">
+              <img src="/api/placeholder/600/400" alt="Authentic Banbo" className="w-full h-40 object-cover rounded-md mb-4" />
+              <h3 className="text-xl font-bold mb-2">Authentic Banbo</h3>
+              <p className="text-gray-600 mb-4">
+                Traditional banbo products made by local artisans, capturing the authentic essence of Nepali heritage.
+              </p>
+              <Button className="bg-indigo-600 text-white hover:bg-indigo-500">Shop Now</Button>
+            </div>
+          </div> */}
+        </div>
+      </section>
+
+      {/* Special Offer Banner */}
+      {/* <section className="py-16 bg-gradient-to-r from-indigo-600 to-violet-600 text-white">
+        <div className="container mx-auto px-4">
+          <div className="flex flex-col lg:flex-row items-center justify-between">
+            <div className="mb-8 lg:mb-0 text-center lg:text-left">
+              <h2 className="text-3xl md:text-4xl font-bold mb-4">Get 15% Off Your First Order</h2>
+              <p className="text-white/80 max-w-lg mx-auto lg:mx-0">
+                Sign up for our newsletter and receive exclusive offers, early access to new products, and personalized recommendations.
+              </p>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-3 w-full max-w-md">
+              <input
+                type="email"
+                placeholder="Your email address"
+                className="rounded-md px-4 py-3 flex-grow text-gray-900 focus:outline-none focus:ring-2 focus:ring-white/50"
+              />
+              <Button className="bg-white text-indigo-600 hover:bg-gray-100 font-medium">
+                Subscribe
+              </Button>
+            </div>
+          </div>
+        </div>
+      </section> */}
+
+      {/* Testimonials */}
+      {/* <section className="py-16 bg-gray-50">
+        <div className="container mx-auto px-4">
+          <div className="mb-10 text-center">
+            <span className="text-sm font-medium text-indigo-600 uppercase tracking-wider mb-2 block">What People Say</span>
+            <h2 className="text-3xl font-bold mb-3">Customer Stories</h2>
+            <p className="text-gray-600 max-w-2xl mx-auto">
+              Hear from our community of satisfied customers about their experiences
+            </p>
+          </div>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {testimonials.map((testimonial, index) => (
-              <div key={index} className="bg-white p-6 rounded-lg shadow-md">
+              <div 
+                key={index} 
+                className="bg-white p-8 rounded-xl shadow-sm hover:shadow-md transition-all duration-300"
+              >
                 <div className="flex items-center mb-4">
                   {[...Array(5)].map((_, i) => (
-                    <Star key={i} size={16} className="text-yellow-500 fill-yellow-500" />
+                    <Star 
+                      key={i} 
+                      size={18} 
+                      className="text-amber-400 fill-amber-400" 
+                    />
                   ))}
                 </div>
-                <p className="text-gray-700 mb-6">"{testimonial.content}"</p>
-                <div className="flex items-center">
+                <p className="text-gray-700 mb-8 leading-relaxed italic">
+                  "{testimonial.content}"
+                </p>
+                <div className="flex items-center mt-auto">
                   <img 
                     src={testimonial.avatar} 
                     alt={testimonial.name}
-                    className="w-10 h-10 rounded-full mr-3"
+                    className="w-12 h-12 rounded-full object-cover border-2 border-white shadow-sm"
                   />
-                  <div>
-                    <h4 className="font-medium">{testimonial.name}</h4>
+                  <div className="ml-4">
+                    <h4 className="font-semibold">{testimonial.name}</h4>
                     <p className="text-sm text-gray-500">{testimonial.role}</p>
                   </div>
                 </div>
@@ -457,26 +469,20 @@ const HomePage = () => {
             ))}
           </div>
         </div>
-      </section>
+      </section> */}
 
-      <section className="py-12 md:py-16 bg-brand-blue text-white">
+      {/* Final CTA */}
+      {/* <section className="py-16 bg-black text-white">
         <div className="container mx-auto px-4 text-center">
-          <h2 className="text-2xl md:text-3xl font-bold mb-4">Get 10% Off Your First Order</h2>
-          <p className="text-lg mb-6 max-w-2xl mx-auto">
-            Sign up for our newsletter and receive exclusive offers, new product alerts, and more!
+          <h2 className="text-3xl md:text-4xl font-bold mb-4">Ready to Transform Your Space?</h2>
+          <p className="text-white/80 mb-8 max-w-2xl mx-auto">
+            Explore our curated collections and find pieces that reflect your unique style and elevate your everyday living.
           </p>
-          <div className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
-            <input
-              type="email"
-              placeholder="Your email address"
-              className="rounded-md px-4 py-2 flex-grow text-gray-900 focus:outline-none focus:ring-2 focus:ring-white"
-            />
-            <Button className="bg-white text-brand-blue hover:bg-gray-100">
-              Subscribe
-            </Button>
-          </div>
+          <Button size="lg" className="bg-white text-black hover:bg-white/90 px-8" asChild>
+            <Link to="/shop">Shop Now</Link>
+          </Button>
         </div>
-      </section>
+      </section> */}
     </MainLayout>
   );
 };

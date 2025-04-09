@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { api } from '@/lib/api';
+
 import { CartItem, Product } from '@/types';
 import { useToast } from '@/components/ui/use-toast';
 
@@ -7,8 +7,8 @@ interface CartContextType {
   items: CartItem[];
   isLoading: boolean;
   addItem: (product: Product, quantity?: number) => void;
-  updateQuantity: (itemId: number, quantity: number) => void;
-  removeItem: (itemId: number) => void;
+  updateQuantity: (itemId: string, quantity: number) => void;
+  removeItem: (itemId: string) => void;
   clearCart: () => void;
   itemCount: number;
   subtotal: number;
@@ -17,7 +17,8 @@ interface CartContextType {
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [items, setItems] = useState<CartItem[]>([]);
+  const itemlocal=JSON.parse(localStorage.getItem('itemcart'))
+  const [items, setItems] = useState<CartItem[]>(itemlocal|| []);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const { toast } = useToast();
 
@@ -49,13 +50,13 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
   };
 
-  const updateQuantity = (itemId: number, quantity: number) => {
+  const updateQuantity = (itemId: string, quantity: number) => {
     setItems(prevItems => prevItems.map(item => 
       item.id === itemId ? { ...item, quantity } : item
     ));
   };
 
-  const removeItem = (itemId: number) => {
+  const removeItem = (itemId: string) => {
     setItems(prevItems => prevItems.filter(item => item.id !== itemId));
     toast({
       title: 'Item Removed',

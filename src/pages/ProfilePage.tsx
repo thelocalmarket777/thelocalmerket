@@ -13,7 +13,7 @@ const ProfilePage = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const token =localStorage.getItem('token') !== null 
-  const user =JSON.stringify(localStorage.getItem('user'))
+  const user =JSON.parse(localStorage.getItem('user'))
   const [formData, setFormData] = useState({
     name: user?.name || '',
     email: user?.email || '',

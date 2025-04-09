@@ -13,11 +13,23 @@ const CategoryPage = () => {
   const { category } = useParams<{ category: string }>();
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-
+  
   useEffect(() => {
     const fetchProducts = async () => {
       setIsLoading(true);
-      await RemoteServices.filterproductCatagories(category)
+      await RemoteServices.filterProductCategories(category)
+      .then(res=>{
+        console.log('ews',res.data)
+        setProducts(res.data)
+      })
+      .catch(error=>console.log('erorr product ',error))
+      .finally(()=>setIsLoading(false))
+       
+    
+    };
+    const fetchProductsAll = async () => {
+      setIsLoading(true);
+      await RemoteServices.productList()
       .then(res=>{
         console.log('ews',res.data)
         setProducts(res.data)
@@ -28,7 +40,13 @@ const CategoryPage = () => {
     
     };
 
-    fetchProducts();
+   
+    if (category && category !== 'all') {
+      fetchProducts();
+    }
+    else {
+      fetchProductsAll();
+    }
   }, [category]);
 
   const formatCategoryName = (category: string) => {

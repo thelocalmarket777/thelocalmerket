@@ -1,6 +1,6 @@
 
 export interface Product {
-  id: number;
+  id: string;
   name: string;
   description: string;
   price: number;
@@ -10,18 +10,21 @@ export interface Product {
   rating?: string;
   imageUrl: string;
   media?: ProductMedia[];
+  author?: string;
+  created_at?: string;
+  genre?: string;
 }
 
 export interface ProductMedia {
-  id: number;
-  product_id: number;
+  id: string;
+  product_id: string;
   file: string;
   file_type: 'image' | 'video' | 'document' | 'audio';
   description?: string;
 }
 
 export interface User {
-  id: number;
+  id: string;
   email: string;
   name?: string;
   address?: string;
@@ -30,25 +33,28 @@ export interface User {
 }
 
 export interface CartItem {
-  id: number;
+  id: string;
   product: Product;
   quantity: number;
+  category:string;
+  name:string
 }
 
 export interface Order {
-  id: number;
-  user_id: number;
+  id: string;
+  user_id: string;
   items: OrderItem[];
   total: number;
   status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
   delivery_method: string;
   delivery_address: string;
   created_at: string;
+  order_items: OrderItem[];
 }
 
 export interface OrderItem {
-  id: number;
-  order_id: number;
+  id: string;
+  order_id: string;
   product: Product;
   quantity: number;
   price: number;
@@ -60,4 +66,18 @@ export interface DeliveryMethod {
   description: string;
   price: number;
   estimated_days: string;
+}
+
+
+export interface FormData {
+  name: string;
+  email: string;
+  address: string;
+  city: string;
+  zipCode: string;
+  phone: string;
+  deliveryMethod: string;
+  notes: string;
+  items?: Product;
+
 }
