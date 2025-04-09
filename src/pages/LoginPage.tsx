@@ -313,7 +313,7 @@ const LoginPage = () => {
     const id_token = credentialResponse.credential;
   
     try {
-      const response = await fetch('http://127.0.0.1:8000/api/account/auth/google/login/', {
+      const response = await fetch('https://backendshop-production-963a.up.railway.app/api/account/auth/google/login/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
