@@ -10,8 +10,19 @@
     "redirects": [
       {
         "source": "/(.*)",
-        "destination": "/index.html",
+        "destination": "/src/App.tsx",
         "statusCode": 200
+      }
+    ],
+    "headers": [
+      {
+        "source": "/(.*)",
+        "headers": [
+          {
+            "key": "X-Frame-Options",
+            "value": "DENY"
+          }
+        ]
       }
     ]
   }
