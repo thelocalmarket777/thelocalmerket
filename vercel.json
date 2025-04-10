@@ -10,7 +10,7 @@
     "redirects": [
       {
         "source": "/(.*)",
-        "destination": "/src/App.tsx",
+        "destination": "/",
         "statusCode": 200
       }
     ],
