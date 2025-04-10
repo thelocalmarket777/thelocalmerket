@@ -113,7 +113,7 @@ const Header = () => {
   }, [search, toast]);
 
   const categories = [
-    { name: 'Book', path: '/category/Book' },
+    { name: 'Books', path: '/category/Books' },
     { name: 'Home Decor', path: '/category/Homedecor' },
     { name: 'Plant', path: '/category/Plant' },
     { name: 'Painting', path: '/category/Painting' },

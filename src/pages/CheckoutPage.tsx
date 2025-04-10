@@ -198,7 +198,7 @@ const CheckoutPage = () => {
       });
 
       // Redirect to order confirmation
-      navigate(`/order-confirmation/${order.id}`, { state: { oderconform: order } });
+      navigate(`/orderConfirmation/${order.id}`, { state: { oderconform: order } });
     } catch (error) {
       console.error('Order placement error:', error);
       const errorMessage = error instanceof Error ? error.message : 'An error occurred while processing your order';

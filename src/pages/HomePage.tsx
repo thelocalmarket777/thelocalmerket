@@ -29,28 +29,28 @@ const HomePage = () => {
   const [bestSellers, setBestSellers] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        setIsLoading(true);
-        const products = await api.products.getAll();
+  // useEffect(() => {
+  //   const fetchProducts = async () => {
+  //     try {
+  //       setIsLoading(true);
+  //       const products = await api.products.getAll();
         
-        // In a real app, these would be separate API calls
-        setFeaturedProducts(products);
+  //       // In a real app, these would be separate API calls
+  //       setFeaturedProducts(products);
         
-        // Simulating different product sets
-        const shuffled = [...products].sort(() => 0.5 - Math.random());
-        setNewArrivals(shuffled.slice(0, 4));
-        setBestSellers(shuffled.slice(4, 8));
-      } catch (error) {
-        console.error('Error fetching products:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  //       // Simulating different product sets
+  //       const shuffled = [...products].sort(() => 0.5 - Math.random());
+  //       setNewArrivals(shuffled.slice(0, 4));
+  //       setBestSellers(shuffled.slice(4, 8));
+  //     } catch (error) {
+  //       console.error('Error fetching products:', error);
+  //     } finally {
+  //       setIsLoading(false);
+  //     }
+  //   };
 
-    fetchProducts();
-  }, []);
+  //   fetchProducts();
+  // }, []);
 
   const categories = [
     { 
@@ -60,7 +60,7 @@ const HomePage = () => {
      
       color: 'bg-blue-100', 
       textColor: 'text-blue-800',
-      path: '/category/Book'
+      path: '/category/Books'
     },
     { 
       name: 'Plants',
