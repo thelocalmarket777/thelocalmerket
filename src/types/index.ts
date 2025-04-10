@@ -1,26 +1,35 @@
+export interface ProductMedia {
+  id: string;
+  file: string;
+  file_type: 'image' | 'video';
+  description?: string;
+}
 
 export interface Product {
   id: string;
   name: string;
-  description: string;
   price: number;
-  category: string;
-  stock: number;
-  status: 'active' | 'inactive';
+  description?: string;
+  discount?: number;
   rating?: string;
-  imageUrl: string;
+  stock: number;
+  imageUrl?: string;
   media?: ProductMedia[];
   author?: string;
-  created_at?: string;
   genre?: string;
+  // Add additional fields that might be used
+  created_at?: string;
+  updated_at?: string;
 }
 
-export interface ProductMedia {
+export interface Review {
   id: string;
-  product_id: string;
-  file: string;
-  file_type: 'image' | 'video' | 'document' | 'audio';
-  description?: string;
+  productId: string;
+  user: string;
+  rating: number;
+  comment: string;
+  date: string;
+  helpful?: number;
 }
 
 export interface User {
@@ -36,8 +45,8 @@ export interface CartItem {
   id: string;
   product: Product;
   quantity: number;
-  category:string;
-  name:string
+  category: string;
+  name: string;
 }
 
 export interface Order {
@@ -68,7 +77,6 @@ export interface DeliveryMethod {
   estimated_days: string;
 }
 
-
 export interface FormData {
   name: string;
   email: string;
@@ -79,5 +87,4 @@ export interface FormData {
   deliveryMethod: string;
   notes: string;
   items?: Product;
-
 }

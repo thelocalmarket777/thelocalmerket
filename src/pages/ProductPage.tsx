@@ -1,20 +1,23 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import MainLayout from '@/components/layout/MainLayout';
 import { Button } from '@/components/ui/button';
-import { 
-  Star, 
-  ShoppingCart, 
-  Heart, 
-  Truck, 
-  Package, 
+import {
+  Star,
+  ShoppingCart,
+  Heart,
+  Truck,
+  Package,
   ArrowLeft,
   ThumbsUp,
-  User
+  User,
+  ShoppingBag,
+  Tag,
+  Clock
 } from 'lucide-react';
 import { Product, ProductMedia } from '@/types';
 import { useCart } from '@/contexts/CartContext';
-import { 
+import {
   Carousel,
   CarouselContent,
   CarouselItem,
@@ -26,6 +29,15 @@ import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
 import RemoteServices from '@/RemoteService/Remoteservice';
+import Loadingdiv from '@/components/ui/loadingdiv';
+import Nothing from '@/components/ui/Nothing';
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
+import { Badge } from '@/components/ui/badge';
 
 const fallbackImage =
   "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ac/No_image_available.svg/450px-No_image_available.svg.png";
@@ -34,6 +46,7 @@ const ProductPage = () => {
   const { id } = useParams<{ id: string }>();
   const { addItem } = useCart();
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const [product, setProduct] = useState<Product | null>(null);
   const [mediaItems, setMediaItems] = useState<ProductMedia[]>([]);
@@ -43,6 +56,17 @@ const ProductPage = () => {
   const [reviewRating, setReviewRating] = useState(5);
   const [reviews, setReviews] = useState<any[]>([]);
   const [isSubmittingReview, setIsSubmittingReview] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(0);
+  const [activeTab, setActiveTab] = useState("all");
+  
+  // Sample user ID for demonstration
+  const currentUserId = "user123"; 
+
+  // Check if discount is available
+  const hasDiscount = product?.discount && product?.discount > 0;
+  const discountedPrice = hasDiscount 
+    ? product?.price - (product?.price * (product?.discount / 100))
+    : product?.price;
 
   // Fetch product and reviews by ID
   const fetchProduct = useCallback(async () => {
@@ -64,8 +88,15 @@ const ProductPage = () => {
       // Fetch reviews
       const reviewRes = await RemoteServices.getReviewOnProduct(id);
       if (reviewRes.status === 200) {
-        console.log('reviews:', reviewRes.data);
-        setReviews(reviewRes.data);
+        // Add sample data for demonstration
+        const reviewsWithSampleData = reviewRes.data.map(review => ({
+          ...review,
+          date: review.date || new Date().toLocaleDateString(),
+          likes: review.likes || Math.floor(Math.random() * 10),
+          likedBy: review.likedBy || [],
+          user: review.user || "Anonymous User"
+        }));
+        setReviews(reviewsWithSampleData);
       } else {
         toast({
           title: "Error",
@@ -105,6 +136,51 @@ const ProductPage = () => {
     }
   };
 
+  const handleBuyNow = () => {
+    if (product) {
+      addItem(product, quantity);
+      navigate('/checkout');
+    }
+  };
+
+  // Like a review
+  const handleLikeReview = async (reviewId: string) => {
+    try {
+      // For demonstration: in a real app, this would be an API call
+      const updatedReviews = reviews.map(review => {
+        if (review.id === reviewId) {
+          const isAlreadyLiked = review.likedBy?.includes(currentUserId);
+          const updatedLikedBy = isAlreadyLiked 
+            ? review.likedBy.filter(id => id !== currentUserId)
+            : [...(review.likedBy || []), currentUserId];
+          
+          return {
+            ...review,
+            likes: isAlreadyLiked ? review.likes - 1 : review.likes + 1,
+            likedBy: updatedLikedBy
+          };
+        }
+        return review;
+      });
+      
+      setReviews(updatedReviews);
+      
+      // In a real app, you would make an API call like:
+      // await RemoteServices.likeReview(reviewId, currentUserId);
+      
+      toast({
+        title: "Success",
+        description: "Review like updated",
+      });
+    } catch (error) {
+      console.error("Error liking review:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update review like",
+      });
+    }
+  };
+
   // Review submission using async/await and a submission state
   const handleSubmitReview = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -120,7 +196,16 @@ const ProductPage = () => {
     try {
       const res = await RemoteServices.createReviewOnProduct(reviewData);
       if (res.status === 200) {
-        setReviews(prev => [...prev, res.data]);
+        // Add sample data for the new review
+        const newReview = {
+          ...res.data,
+          date: new Date().toLocaleDateString(),
+          likes: 0,
+          likedBy: [],
+          user: "Current User" // In real app, use actual username
+        };
+        
+        setReviews(prev => [newReview, ...prev]);
         setReviewText('');
         setReviewRating(5);
         toast({
@@ -141,6 +226,24 @@ const ProductPage = () => {
       });
     } finally {
       setIsSubmittingReview(false);
+    }
+  };
+
+  // Filter reviews based on active tab
+  const filteredReviews = () => {
+    switch(activeTab) {
+      case "newest":
+        return [...reviews].sort((a, b) => 
+          new Date(b.date).getTime() - new Date(a.date).getTime()
+        );
+      case "highest":
+        return [...reviews].sort((a, b) => b.rating - a.rating);
+      case "lowest":
+        return [...reviews].sort((a, b) => a.rating - b.rating);
+      case "most-liked":
+        return [...reviews].sort((a, b) => b.likes - a.likes);
+      default:
+        return reviews;
     }
   };
 
@@ -213,78 +316,78 @@ const ProductPage = () => {
     </Card>
   );
 
-  // Render list of reviews
+  // Render list of reviews with filter tabs
   const renderReviews = () => (
-    <ScrollArea className="h-[600px] rounded-md">
-      {reviews.length > 0 ? (
-        reviews.map((review) => (
-          <Card key={review.id} className="mb-4">
-            <CardHeader>
-              <div className="flex justify-between items-start">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <User size={20} className="text-gray-400" />
-                    <span className="font-medium">{review.user}</span>
-                  </div>
-                  <div className="mt-1">
-                    {renderRating(review.rating, 16)}
+    <>
+      <Tabs defaultValue="all" className="mb-6" onValueChange={setActiveTab}>
+        <TabsList className="mb-4">
+          <TabsTrigger value="all">All Reviews</TabsTrigger>
+          <TabsTrigger value="newest">
+            <Clock size={14} className="mr-1" />
+            Newest
+          </TabsTrigger>
+          <TabsTrigger value="highest">Highest Rated</TabsTrigger>
+          <TabsTrigger value="lowest">Lowest Rated</TabsTrigger>
+          <TabsTrigger value="most-liked">Most Liked</TabsTrigger>
+        </TabsList>
+      </Tabs>
+      
+      <ScrollArea className="h-[600px] rounded-md">
+        {filteredReviews().length > 0 ? (
+          filteredReviews().map((review) => (
+            <Card key={review.id} className="mb-4">
+              <CardHeader>
+                <div className="flex justify-between items-start">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <User size={20} className="text-gray-400" />
+                      <span className="font-medium">{review.user}</span>
+                      {review.date && (
+                        <Badge variant="outline" className="ml-2 text-xs">
+                          <Clock size={12} className="mr-1" />
+                          {review.date}
+                        </Badge>
+                      )}
+                    </div>
+                    <div className="mt-1">
+                      {renderRating(review.rating, 16)}
+                    </div>
                   </div>
                 </div>
-                <div className="text-sm text-gray-500">{review.date}</div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <p className="text-gray-700">{review.comment}</p>
-            </CardContent>
-            <CardFooter>
-              {/* <div className="flex items-center gap-2">
-                <Button variant="ghost" size="sm" className="gap-1">
-                  <ThumbsUp size={16} />
-                  Helpful ({review.helpful})
-                </Button>
-              </div> */}
-            </CardFooter>
-          </Card>
-        ))
-      ) : (
-        <div className="text-center py-8 text-gray-500">
-          No reviews yet. Be the first to review this product!
-        </div>
-      )}
-    </ScrollArea>
+              </CardHeader>
+              <CardContent>
+                <p className="text-gray-700">{review.comment}</p>
+              </CardContent>
+              <CardFooter>
+                <div className="flex items-center gap-2">
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className={`gap-1 ${review.likedBy?.includes(currentUserId) ? 'text-blue-600' : ''}`}
+                    onClick={() => handleLikeReview(review.id)}
+                  >
+                    <ThumbsUp size={16} />
+                    Helpful ({review.likes || 0})
+                  </Button>
+                </div>
+              </CardFooter>
+            </Card>
+          ))
+        ) : (
+          <div className="text-center py-8 text-gray-500">
+            No reviews yet. Be the first to review this product!
+          </div>
+        )}
+      </ScrollArea>
+    </>
   );
 
   if (isLoading) {
-    return (
-      <MainLayout>
-        <div className="container mx-auto px-4 py-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="h-[500px] bg-gray-100 animate-pulse rounded-lg"></div>
-            <div className="space-y-4">
-              <div className="h-8 bg-gray-100 animate-pulse rounded w-3/4"></div>
-              <div className="h-4 bg-gray-100 animate-pulse rounded w-1/4"></div>
-              <div className="h-24 bg-gray-100 animate-pulse rounded"></div>
-              <div className="h-10 bg-gray-100 animate-pulse rounded w-1/3"></div>
-              <div className="h-12 bg-gray-100 animate-pulse rounded"></div>
-            </div>
-          </div>
-        </div>
-      </MainLayout>
-    );
+    return <Loadingdiv />;
   }
 
   if (!product) {
-    return (
-      <MainLayout>
-        <div className="container mx-auto px-4 py-16 text-center">
-          <h1 className="text-2xl font-bold mb-4">Product Not Found</h1>
-          <p className="mb-6">The product you're looking for doesn't exist or has been removed.</p>
-          <Button asChild>
-            <Link to="/">Return to Home</Link>
-          </Button>
-        </div>
-      </MainLayout>
-    );
+    return <Nothing title={'Product Not Found'} content={'The product you are looking for doesn`t exist or has been removed.'} />;
   }
 
   return (
@@ -299,68 +402,129 @@ const ProductPage = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <div className="bg-gray-50 rounded-lg overflow-hidden">
-            {mediaItems.length > 0 ? (
-              <Carousel className="w-full" opts={{ loop: true, align: "start" }}>
-                <CarouselContent>
-                  {mediaItems.map((media, index) => (
-                    <CarouselItem key={index}>
-                      {media.file_type === 'image'
-                        ? renderProductImage(media.file, media.description || product.name)
-                        : null}
-                    </CarouselItem>
-                  ))}
-                </CarouselContent>
-                <div className="absolute -bottom-4 left-0 right-0 flex justify-center gap-1 py-2">
-                  {mediaItems.map((_, index) => (
-                    <div
-                      key={index}
-                      className={`h-2 w-2 rounded-full transition-colors ${
-                        index === 0 ? "bg-primary" : "bg-gray-300"
+            {/* Product tags */}
+            <div className="absolute z-10 left-4 top-24">
+              {product?.isNew && (
+                <Badge className="bg-blue-500 mb-2 shadow-md">
+                  <Tag size={12} className="mr-1" /> New Arrival
+                </Badge>
+              )}
+              {hasDiscount && (
+                <Badge className="bg-red-500 shadow-md">
+                  <Tag size={12} className="mr-1" /> {product?.discount}% OFF
+                </Badge>
+              )}
+            </div>
+            
+            {/* Product images carousel */}
+            {mediaItems?.length > 0 ? (
+              <div>
+                <Carousel 
+                  className="w-full" 
+                  opts={{ loop: true, align: "start" }}
+                  value={selectedImage}
+                  onValueChange={setSelectedImage}
+                >
+                  <CarouselContent>
+                    {mediaItems?.map((media, index) => (
+                      <CarouselItem key={index}>
+                        {media?.file_type === 'image'
+                          ? renderProductImage(media?.file, media?.description || product?.name)
+                          : null}
+                      </CarouselItem>
+                    ))}
+                  </CarouselContent>
+                  <CarouselPrevious className="left-2 lg:left-5 bg-white/70 hover:bg-white" />
+                  <CarouselNext className="right-2 lg:right-5 bg-white/70 hover:bg-white" />
+                </Carousel>
+
+                {/* Thumbnail navigation */}
+                <div className="flex justify-center gap-2 mt-4 px-4 overflow-x-auto">
+                  {mediaItems?.map((media, index) => (
+                    <div 
+                      key={index} 
+                      className={`h-16 w-16 rounded cursor-pointer border-2 overflow-hidden ${
+                        selectedImage === index ? 'border-blue-500' : 'border-transparent'
                       }`}
-                    />
+                      onClick={() => setSelectedImage(index)}
+                    >
+                      <img 
+                        src={media?.file} 
+                        alt={`Thumbnail ${index + 1}`} 
+                        className="h-full w-full object-cover"
+                      />
+                    </div>
                   ))}
                 </div>
-                <CarouselPrevious className="-left-12 lg:-left-5 bg-white hover:bg-gray-100" />
-                <CarouselNext className="-right-12 lg:-right-5 bg-white hover:bg-gray-100" />
-              </Carousel>
+              </div>
             ) : (
-              renderProductImage(product.imageUrl, product.name)
+              renderProductImage(product?.imageUrl, product?.name)
             )}
           </div>
 
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">{product.name}</h1>
-            <div className="flex items-center mb-2">
-              {product.author && (
-                <span className="text-sm font-medium text-gray-500"> Author :{product.author}</span>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">{product?.name}</h1>
+            <div className="flex flex-wrap items-center gap-2 mb-3">
+              {product?.author && (
+                <Badge variant="outline" className="text-sm">Author: {product?.author}</Badge>
               )}
-              &nbsp;
-              {product.genre && (
-                <span className="text-sm font-medium text-gray-500"> Genre :{product.genre}</span>
+              {product?.genre && (
+                <Badge variant="outline" className="text-sm">Genre: {product?.genre}</Badge>
               )}
-              </div>
-            <div className="mb-4">
-              {renderRating(Number(product.rating) || 0)}
+              {product?.totalpage && (
+                <Badge variant="outline" className="text-sm">Page: {product?.totalpage}</Badge>
+              )}
+              {product?.language && (
+                <Badge variant="outline" className="text-sm">Language: {product?.language}</Badge>
+              )}
+              {product?.madeinwhere && (
+                <Badge variant="outline" className="text-sm">MFG: {product?.madeinwhere}</Badge>
+              )}
+              {product?.ageproduct && (
+                <Badge variant="outline" className="text-sm">Health: {product?.ageproduct}</Badge>
+              )}
             </div>
-            <div className="text-2xl font-bold text-gray-900 mb-4">
-              NPR {product.price}
+            <div className="mb-4 flex items-center">
+              {renderRating(Number(product?.rating) || 0)}
+              <span className="ml-2 text-sm text-gray-500">
+                {reviews?.length} {reviews?.length === 1 ? 'review' : 'reviews'}
+              </span>
             </div>
+            
+            {/* Price display with discount */}
             <div className="mb-6">
-              <p className="text-gray-700">{product.description}</p>
+              {hasDiscount ? (
+                <div className="flex items-center gap-2">
+                  <span className="text-2xl font-bold text-red-600">
+                    NPR {discountedPrice}
+                  </span>
+                  <span className="text-lg text-gray-500 line-through">
+                    NPR {product?.price}
+                  </span>
+                  <Badge className="bg-red-500 ml-2">Save {product?.discount}%</Badge>
+                </div>
+              ) : (
+                <span className="text-2xl font-bold text-gray-900">
+                  NPR {product?.price}
+                </span>
+              )}
+            </div>
+
+            <div className="mb-6">
+              <p className="text-gray-700 leading-relaxed">{product?.description}</p>
             </div>
             <div className="mb-6">
               <span
-                className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                  product.stock > 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                }`}
+                className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${product?.stock > 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                  }`}
               >
-                {product.stock > 0
-                  ? `In Stock (${product.stock} available)`
+                {product?.stock > 0
+                  ? `In Stock (${product?.stock} available)`
                   : 'Out of Stock'}
               </span>
             </div>
             <div className="mb-6">
-              <div className="flex items-center gap-2 mb-2">
+              <div className="flex items-center gap-3 mb-2">
                 <label className="text-sm font-medium">Quantity</label>
                 <div className="flex items-center">
                   <button
@@ -373,14 +537,14 @@ const ProductPage = () => {
                   <input
                     type="number"
                     min="1"
-                    max={product.stock}
+                    max={product?.stock}
                     value={quantity}
                     onChange={(e) => handleQuantityChange(parseInt(e.target.value, 10) || 1)}
                     className="w-16 px-3 py-2 border-t border-b border-gray-300 text-center text-gray-900"
                   />
                   <button
                     onClick={() => handleQuantityChange(quantity + 1)}
-                    disabled={quantity >= product.stock}
+                    disabled={quantity >= product?.stock}
                     className="px-3 py-2 border border-gray-300 rounded-r-md bg-gray-50 text-gray-500 hover:bg-gray-100 disabled:opacity-50"
                   >
                     +
@@ -388,21 +552,34 @@ const ProductPage = () => {
                 </div>
               </div>
             </div>
+            
+            {/* Action buttons */}
             <div className="flex flex-wrap gap-4 mb-8">
               <Button
                 onClick={handleAddToCart}
-                disabled={product.stock === 0}
+                disabled={product?.stock === 0}
                 className="flex-1 gap-2"
                 size="lg"
               >
                 <ShoppingCart size={20} />
                 Add to Cart
               </Button>
-              {/* <Button variant="outline" size="lg" className="gap-2">
+              <Button
+                onClick={handleBuyNow}
+                disabled={product?.stock === 0}
+                className="flex-1 gap-2 bg-green-600 hover:bg-green-700"
+                size="lg"
+              >
+                <ShoppingBag size={20} />
+                Buy Now
+              </Button>
+              <Button variant="outline" size="lg" className="gap-2">
                 <Heart size={20} />
-                Add to Wishlist
-              </Button> */}
+                Wishlist
+              </Button>
             </div>
+            
+            {/* Shipping information */}
             <div className="border-t border-gray-200 pt-6 space-y-4">
               <div className="flex items-start gap-3">
                 <Truck className="text-gray-400 mt-0.5" size={20} />
@@ -422,6 +599,7 @@ const ProductPage = () => {
           </div>
         </div>
 
+        {/* Reviews section */}
         <div className="mt-16">
           <h2 className="text-2xl font-bold mb-8">Customer Reviews</h2>
           {renderReviewForm()}

@@ -1,53 +1,82 @@
-
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import MainLayout from '@/components/layout/MainLayout';
 import ProductCard from '@/components/products/ProductCard';
 import { Button } from '@/components/ui/button';
-import { api } from '@/lib/api';
 import { Product } from '@/types';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Loader2 } from 'lucide-react';
 import RemoteServices from '@/RemoteService/Remoteservice';
+
+const PRODUCTS_PER_PAGE = 8;
 
 const CategoryPage = () => {
   const { category } = useParams<{ category: string }>();
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [allProducts, setAllProducts] = useState<Product[]>([]);
   
+  const observer = useRef<IntersectionObserver | null>(null);
+  const lastProductElementRef = useCallback((node: HTMLDivElement | null) => {
+    if (isLoading) return;
+    if (observer.current) observer.current.disconnect();
+    observer.current = new IntersectionObserver(entries => {
+      if (entries[0].isIntersecting && hasMore) {
+        setPage(prevPage => prevPage + 1);
+      }
+    });
+    if (node) observer.current.observe(node);
+  }, [isLoading, hasMore]);
+
+  // Initial fetch
   useEffect(() => {
-    const fetchProducts = async () => {
+    const fetchAllProducts = async () => {
       setIsLoading(true);
-      await RemoteServices.filterProductCategories(category)
-      .then(res=>{
-        console.log('ews',res.data)
-        setProducts(res.data)
-      })
-      .catch(error=>console.log('erorr product ',error))
-      .finally(()=>setIsLoading(false))
-       
-    
-    };
-    const fetchProductsAll = async () => {
-      setIsLoading(true);
-      await RemoteServices.productList()
-      .then(res=>{
-        console.log('ews',res.data)
-        setProducts(res.data)
-      })
-      .catch(error=>console.log('erorr product ',error))
-      .finally(()=>setIsLoading(false))
-       
-    
+      try {
+        let response;
+        if (category && category !== 'all') {
+          response = await RemoteServices.filterProductCategories(category);
+        } else {
+          response = await RemoteServices.productList();
+        }
+        
+        console.log('All products fetched:', response.data);
+        setAllProducts(response.data);
+        
+        // Initialize with first page
+        const initialProducts = response.data.slice(0, PRODUCTS_PER_PAGE);
+        setProducts(initialProducts);
+        setHasMore(response.data.length > PRODUCTS_PER_PAGE);
+      } catch (error) {
+        console.log('Error fetching products:', error);
+      } finally {
+        setIsLoading(false);
+      }
     };
 
-   
-    if (category && category !== 'all') {
-      fetchProducts();
-    }
-    else {
-      fetchProductsAll();
-    }
+    fetchAllProducts();
+    setPage(1); // Reset page when category changes
   }, [category]);
+
+  // Handle pagination
+  useEffect(() => {
+    if (page === 1) return; // Skip on initial load
+    
+    const loadMoreProducts = () => {
+      const startIndex = (page - 1) * PRODUCTS_PER_PAGE;
+      const endIndex = page * PRODUCTS_PER_PAGE;
+      const newProducts = allProducts.slice(startIndex, endIndex);
+      
+      if (newProducts.length > 0) {
+        setProducts(prevProducts => [...prevProducts, ...newProducts]);
+      }
+      
+      setHasMore(endIndex < allProducts.length);
+    };
+    
+    loadMoreProducts();
+  }, [page, allProducts]);
 
   const formatCategoryName = (category: string) => {
     return category.charAt(0).toUpperCase() + category.slice(1);
@@ -72,26 +101,48 @@ const CategoryPage = () => {
             {category ? formatCategoryName(category) : 'All Products'}
           </h1>
           <p className="text-gray-600 mt-2">
-            {products.length} {products.length === 1 ? 'product' : 'products'} available
+            {allProducts.length} {allProducts.length === 1 ? 'product' : 'products'} available
           </p>
         </div>
 
-        {isLoading ? (
+        {isLoading && products.length === 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {[...Array(4)].map((_, index) => (
-              <div key={index} className="rounded-lg border border-gray-200 bg-white p-4 h-[320px] animate-pulse">
-                <div className="h-[200px] bg-gray-200 rounded-md mb-4"></div>
+              <div key={index} className="rounded-lg border border-gray-200 bg-white p-4 h-80 animate-pulse">
+                <div className="h-48 bg-gray-200 rounded-md mb-4"></div>
                 <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
                 <div className="h-4 bg-gray-200 rounded w-1/2"></div>
               </div>
             ))}
           </div>
         ) : products.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {products.map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
-          </div>
+          <>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {products.map((product, index) => {
+                if (products.length === index + 1) {
+                  return (
+                    <div ref={lastProductElementRef} key={product.id}>
+                      <ProductCard product={product} />
+                    </div>
+                  );
+                } else {
+                  return <ProductCard key={product.id} product={product} />;
+                }
+              })}
+            </div>
+            
+            {isLoading && products.length > 0 && (
+              <div className="flex justify-center mt-8">
+                <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+              </div>
+            )}
+            
+            {!hasMore && products.length > 0 && (
+              <div className="text-center mt-8 text-gray-500">
+                No more products to load
+              </div>
+            )}
+          </>
         ) : (
           <div className="text-center py-12">
             <h2 className="text-xl font-semibold mb-4">No products found in this category</h2>
