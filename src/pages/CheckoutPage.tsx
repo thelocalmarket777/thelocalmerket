@@ -8,7 +8,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Textarea } from '@/components/ui/textarea';
 import { useCart } from '@/contexts/CartContext';
 import { useAuth } from '@/contexts/AuthContext';
-import { AlertCircle, CheckCircle2, Loader2 } from 'lucide-react';
+import { AlertCircle, CheckCircle2, Loader2, Clock, MapPin, Truck, Contact } from 'lucide-react';
 import { DeliveryMethod, FormData } from '@/types';
 import { useToast } from '@/components/ui/use-toast';
 import { mockDeliveryMethods } from '@/lib/api';
@@ -16,13 +16,43 @@ import RemoteServices from '@/RemoteService/Remoteservice';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
+import { Badge } from '@/components/ui/badge';
 
 const CheckoutPage = () => {
   const { items, subtotal, clearCart } = useCart();
-  const navigate = useNavigate();
+  const navigate = useNavigate(); 
   const { toast } = useToast();
 
-  const [deliveryMethods, setDeliveryMethods] = useState<DeliveryMethod[]>(mockDeliveryMethods || []);
+  // Enhanced delivery methods with icons and priority indicators
+  const enhancedDeliveryMethods: DeliveryMethod[] = [
+    {
+      id: 'pickup',
+      name: 'I will pick up',
+      description: 'Pick up your order from our store',
+      estimated_days: 'Same day',
+      price: 0,
+      icon: MapPin
+    },
+    {
+      id: 'urgent',
+      name: 'Urgent Delivery',
+      description: 'Express delivery within hours',
+      estimated_days: 'Same day (2-4 hours)',
+      price: 200,
+      icon: Clock,
+      priority: 'high'
+    },
+    {
+      id: 'normal',
+      name: 'Normal Delivery',
+      description: 'Standard delivery service',
+      estimated_days: '1-3 days',
+      price: 100,
+      icon: Truck
+    }
+  ];
+
+  const [deliveryMethods, setDeliveryMethods] = useState<DeliveryMethod[]>(enhancedDeliveryMethods || []);
   const [isLoading, setIsLoading] = useState(false);
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
@@ -34,14 +64,13 @@ const CheckoutPage = () => {
   // Form state
   const [formData, setFormData] = useState<FormData>({
     address: user?.address || '',
-    city: '',
-    zipCode: '',
+    city: user?.city || '',
+    zipCode: user?.zip_code || '',
     phone: user?.phone_number || '',
-    deliveryMethod: '',
+    deliveryMethod: enhancedDeliveryMethods[0]?.id || '', // Set default value
     notes: '',
     paymentMethod: 'cash', // Default payment method
   });
-
 
   const currencySymbol = 'NPR';
 
@@ -56,29 +85,11 @@ const CheckoutPage = () => {
       return;
     }
 
-    // Fetch delivery methods
-    const fetchDeliveryMethods = async () => {
-      try {
-        setIsLoading(true);
-        const methods = mockDeliveryMethods;
-        setDeliveryMethods(methods);
-        // Set default delivery method
-        if (methods.length > 0) {
-          setFormData(prev => ({ ...prev, deliveryMethod: methods[0].id }));
-        }
-      } catch (error) {
-        console.error('Error fetching delivery methods:', error);
-        toast({
-          variant: 'destructive',
-          title: 'Failed to load delivery methods',
-          description: 'Please try refreshing the page',
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
+    // Set delivery methods
+    setDeliveryMethods(enhancedDeliveryMethods);
 
-    fetchDeliveryMethods();
+    
+    setIsLoading(false);
   }, [items.length, user, navigate, toast]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -104,18 +115,20 @@ const CheckoutPage = () => {
 
   const validateForm = (): boolean => {
     const errors: Record<string, string> = {};
-    const requiredFields = [
-      { key: 'address', label: 'Street Address' },
-      { key: 'city', label: 'City' },
-      { key: 'phone', label: 'Phone Number' },
-      { key: 'deliveryMethod', label: 'Delivery Method' }
-    ];
-
-    requiredFields.forEach(field => {
-      if (!formData[field.key as keyof typeof formData]) {
-        errors[field.key] = `${field.label} is required`;
-      }
-    });
+    
+    // Different validation based on delivery method
+    const isPickup = formData.deliveryMethod === 'pickup';
+    
+    // Only validate address fields if not pickup
+    if (!isPickup) {
+      if (!formData.address) errors.address = 'Street Address is required';
+      if (!formData.city) errors.city = 'City is required';
+      if (!formData.zipCode) errors.zipCode = 'Zip Code is required';
+    }
+    
+    // Always validate these fields
+    if (!formData.phone) errors.phone = 'Phone Number is required';
+    if (!formData.deliveryMethod) errors.deliveryMethod = 'Delivery Method is required';
 
     // Phone validation
     if (formData.phone && !/^[0-9+\- ]{10,15}$/.test(formData.phone)) {
@@ -173,12 +186,15 @@ const CheckoutPage = () => {
         category: item.product.category,
         name: item.product.name
       })),
-      shipping_address: `${formData.address}, ${formData.city}, ${formData.zipCode}`,
+      shipping_address: formData.deliveryMethod === 'pickup' 
+        ? 'Store Pickup' 
+        : `${formData.address}, ${formData.city}, ${formData.zipCode}`,
       delivery_method: formData.deliveryMethod,
       subtotal: subtotal,
       shipping_cost: selectedDeliveryMethod?.price || 0,
       total_amount: calculatedTotal,
-      payment_method: 'cash' // Only cash payment is supported now
+      payment_method: formData.paymentMethod,
+      receiverContact:formData.phone
     };
 
     // Place the order
@@ -198,7 +214,7 @@ const CheckoutPage = () => {
       });
 
       // Redirect to order confirmation
-      navigate(`/orderConfirmation/${order.id}`, { state: { oderconform: order } });
+      navigate(`/order-confirmation/`, { state: { oderconform: order } });
     } catch (error) {
       console.error('Order placement error:', error);
       const errorMessage = error instanceof Error ? error.message : 'An error occurred while processing your order';
@@ -212,6 +228,27 @@ const CheckoutPage = () => {
       setIsPlacingOrder(false);
     }
   };
+
+  // Get the badge color based on priority
+  const getPriorityBadge = (priority?: string) => {
+    if (!priority) return null;
+    
+    switch(priority) {
+      case 'high':
+        return <Badge className="ml-2 bg-red-500">Express</Badge>;
+      default:
+        return null;
+    }
+  };
+
+  // Get appropriate icon for delivery method
+  const getDeliveryIcon = (icon) => {
+    const Icon = icon || Truck;
+    return <Icon className="h-5 w-5 mr-3 text-gray-600" />;
+  };
+
+  // Check if address fields should be disabled (for pickup option)
+  const isAddressDisabled = formData.deliveryMethod === 'pickup';
 
   return (
     <MainLayout>
@@ -231,6 +268,73 @@ const CheckoutPage = () => {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Shipping Information */}
             <div className="lg:col-span-2 space-y-6">
+             {/* Delivery Method */}
+             <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle>Delivery Method</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {isLoading ? (
+                    <div className="animate-pulse space-y-4">
+                      {[...Array(3)].map((_, index) => (
+                        <div key={index} className="h-16 bg-gray-100 rounded"></div>
+                      ))}
+                    </div>
+                  ) : (
+                    <>
+                      <RadioGroup
+                  
+                        value={formData.deliveryMethod}
+                        onValueChange={handleDeliveryMethodChange}
+                        className="space-y-4"
+                        // aria-invalid={!!formErrors.deliveryMethod}
+                        // aria-describedby={formErrors.deliveryMethod ? "deliveryMethod-error" : undefined}
+                      >
+                        {deliveryMethods.map((method) => (
+                          <div
+                            key={method.id}
+                            className={`flex items-center justify-between border border-gray-200 rounded-lg p-4 hover:bg-gray-50 cursor-pointer transition-colors ${
+                              method.priority === 'high' ? 'border-red-200 bg-red-50 hover:bg-red-100' : 
+                              method.id === 'pickup' ? 'border-green-200 bg-green-50 hover:bg-green-100' : 
+                              formData.deliveryMethod === method.id ? 'bg-blue-50 border-blue-500' : ''
+                            }`}
+                          >
+                            <div className="flex items-center gap-3">
+                              <RadioGroupItem value={method.id} id={method.id} />
+                              <div className="flex items-center">
+                                {getDeliveryIcon(method.icon)}
+                                <div>
+                                  <div className="flex items-center">
+                                    <Label
+                                      htmlFor={method.id}
+                                      className="font-medium cursor-pointer"
+                                    >
+                                      {method.name}
+                                    </Label>
+                                    {getPriorityBadge(method.priority)}
+                                  </div>
+                                  <p className="text-sm text-gray-500">
+                                    {method.description} ({method.estimated_days})
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                            <div className="font-medium">
+                              {method.price > 0 ? `${currencySymbol} ${method.price.toFixed(2)}` : 'Free'}
+                            </div>
+                          </div>
+                        ))}
+                      </RadioGroup>
+                      {formErrors.deliveryMethod && (
+                        <p id="deliveryMethod-error" className="text-sm text-red-500 mt-2">
+                          {formErrors.deliveryMethod}
+                        </p>
+                      )}
+                    </>
+                  )}
+                </CardContent>
+              </Card>
+
               <Card>
                 <CardHeader className="pb-3">
                   <CardTitle>Shipping Information</CardTitle>
@@ -270,7 +374,8 @@ const CheckoutPage = () => {
                         value={formData.address}
                         onChange={handleInputChange}
                         placeholder="Enter your street address"
-                        required
+                        required={!isAddressDisabled}
+                        disabled={isAddressDisabled}
                         aria-invalid={!!formErrors.address}
                         aria-describedby={formErrors.address ? "address-error" : undefined}
                       />
@@ -289,7 +394,8 @@ const CheckoutPage = () => {
                         value={formData.city}
                         onChange={handleInputChange}
                         placeholder="Enter your city"
-                        required
+                        required={!isAddressDisabled}
+                        disabled={isAddressDisabled}
                         aria-invalid={!!formErrors.city}
                         aria-describedby={formErrors.city ? "city-error" : undefined}
                       />
@@ -308,7 +414,8 @@ const CheckoutPage = () => {
                         value={formData.zipCode}
                         onChange={handleInputChange}
                         placeholder="Enter your zip code"
-                        required
+                        required={!isAddressDisabled}
+                        disabled={isAddressDisabled}
                         aria-invalid={!!formErrors.zipCode}
                         aria-describedby={formErrors.zipCode ? "zipCode-error" : undefined}
                       />
@@ -320,7 +427,7 @@ const CheckoutPage = () => {
                     </div>
 
                     <div className="md:col-span-2">
-                      <Label htmlFor="phone">Phone Number</Label>
+                      <Label htmlFor="phone">Recevier Number</Label>
                       <Input
                         id="phone"
                         name="phone"
@@ -342,93 +449,8 @@ const CheckoutPage = () => {
                 </CardContent>
               </Card>
 
-              {/* Delivery Method */}
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle>Delivery Method</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {isLoading ? (
-                    <div className="animate-pulse space-y-4">
-                      {[...Array(3)].map((_, index) => (
-                        <div key={index} className="h-16 bg-gray-100 rounded"></div>
-                      ))}
-                    </div>
-                  ) : (
-                    <>
-                      <RadioGroup
-                        value={formData.deliveryMethod}
-                        onValueChange={handleDeliveryMethodChange}
-                        className="space-y-4"
-                        aria-invalid={!!formErrors.deliveryMethod}
-                        aria-describedby={formErrors.deliveryMethod ? "deliveryMethod-error" : undefined}
-                      >
-                        {deliveryMethods.map((method) => (
-                          <div
-                            key={method.id}
-                            className="flex items-center justify-between border border-gray-200 rounded-lg p-4 hover:bg-gray-50 cursor-pointer transition-colors"
-                            onClick={() => handleDeliveryMethodChange(method.id)}
-                          >
-                            <div className="flex items-center gap-3">
-                              <RadioGroupItem value={method.id} id={method.id} />
-                              <div>
-                                <Label
-                                  htmlFor={method.id}
-                                  className="font-medium cursor-pointer"
-                                >
-                                  {method.name}
-                                </Label>
-                                <p className="text-sm  text-gray-500">
-                                  {method.description} ({method.estimated_days})
-                                </p>
-                              </div>
-                            </div>
-                            <div className="font-medium">NPR{method.price.toFixed(2)}</div>
-                          </div>
-                        ))}
-                      </RadioGroup>
-                      {formErrors.deliveryMethod && (
-                        <p id="deliveryMethod-error" className="text-sm text-red-500 mt-2">
-                          {formErrors.deliveryMethod}
-                        </p>
-                      )}
-                    </>
-                  )}
-                </CardContent>
-              </Card>
-
-              {/* Payment Method */}
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle>Payment Method</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <RadioGroup
-                    value={formData.paymentMethod}
-                    onValueChange={handlePaymentMethodChange}
-                  >
-                    <div className="flex items-center justify-between border border-gray-200 rounded-lg p-4 bg-gray-50">
-                      <div className="flex items-center gap-3">
-                        <RadioGroupItem value="cash" id="cash" />
-                        <div>
-                          <Label
-                            htmlFor="cash"
-                            className="font-medium cursor-pointer"
-                          >
-                            Cash on Delivery
-                          </Label>
-                          <p className="text-sm text-gray-500">
-                            Pay with cash when your order is delivered
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  </RadioGroup>
-                </CardContent>
-              </Card>
-
-              {/* Order Notes */}
-              <Card>
+    {/* Order Notes */}
+    <Card>
                 <CardHeader className="pb-3">
                   <CardTitle>Additional Information</CardTitle>
                 </CardHeader>
@@ -447,6 +469,92 @@ const CheckoutPage = () => {
                   </div>
                 </CardContent>
               </Card>
+             
+
+              {/* Payment Method */}
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle>Payment Method</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <RadioGroup
+                    value={formData.paymentMethod}
+                    onValueChange={handlePaymentMethodChange}
+                    className="space-y-4"
+                  >
+                    <div className="flex items-center justify-between border border-gray-200 rounded-lg p-4 hover:bg-gray-50 cursor-pointer">
+                      <div className="flex items-center gap-3">
+                        <RadioGroupItem value="cash" id="cash" />
+                        <div>
+                          <Label
+                            htmlFor="cash"
+                            className="font-medium cursor-pointer"
+                          >
+                            Cash on Delivery
+                          </Label>
+                          <p className="text-sm text-gray-500">
+                            Pay with cash when your order is delivered
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* <div className="flex items-center justify-between border border-gray-200 rounded-lg p-4 hover:bg-gray-50 cursor-pointer">
+                      <div className="flex items-center gap-3">
+                        <RadioGroupItem value="esewa" id="esewa" />
+                        <div className="flex items-center">
+                          <div className="w-8 h-8 mr-2">
+                            <img 
+                              src="/api/placeholder/32/32" 
+                              alt="eSewa" 
+                              className="w-full h-full object-contain" 
+                            />
+                          </div>
+                          <div>
+                            <Label
+                              htmlFor="esewa"
+                              className="font-medium cursor-pointer"
+                            >
+                              eSewa
+                            </Label>
+                            <p className="text-sm text-gray-500">
+                              Pay securely with your eSewa account
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center justify-between border border-gray-200 rounded-lg p-4 hover:bg-gray-50 cursor-pointer">
+                      <div className="flex items-center gap-3">
+                        <RadioGroupItem value="khalti" id="khalti" />
+                        <div className="flex items-center">
+                          <div className="w-8 h-8 mr-2">
+                            <img 
+                              src="/api/placeholder/32/32" 
+                              alt="Khalti" 
+                              className="w-full h-full object-contain" 
+                            />
+                          </div>
+                          <div>
+                            <Label
+                              htmlFor="khalti"
+                              className="font-medium cursor-pointer"
+                            >
+                              Khalti
+                            </Label>
+                            <p className="text-sm text-gray-500">
+                              Pay securely with your Khalti wallet
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div> */}
+                  </RadioGroup>
+                </CardContent>
+              </Card>
+
+          
             </div>
 
             {/* Order Summary */}
@@ -462,18 +570,18 @@ const CheckoutPage = () => {
                         <div className="flex items-start">
                           <div className="w-12 h-12 rounded-md overflow-hidden bg-gray-100 border border-gray-200 mr-3">
                             <img
-                              src={item.product.imageUrl || (item.product.media && item.product.media[0]?.file)}
+                              src={item.product.image_url || (item.product.media && item.product.media[0]?.file)}
                               alt={item.product.name}
                               className="w-full h-full object-cover"
                             />
                           </div>
                           <div>
                             <h4 className="text-sm font-medium line-clamp-1">{item.product.name}</h4>
-                            <p className="text-xs text-gray-500">Qty: {item.quantity}</p>
+                            <p className="text-xs text-gray-500">Qty: {item.quantity} * {item.product.price}</p>
                           </div>
                         </div>
                         <div className="text-sm font-medium">
-                        {currencySymbol} &nbsp; {(item.product.price * item.quantity).toFixed(2)}
+                          {currencySymbol} {(item.product.price * item.quantity).toFixed(2)}
                         </div>
                       </div>
                     ))}
@@ -482,18 +590,23 @@ const CheckoutPage = () => {
                   <div className="space-y-3">
                     <div className="flex justify-between items-center">
                       <span className="text-gray-600">Subtotal</span>
-                      <span className="font-medium">{currencySymbol} &nbsp;{subtotal.toFixed(2)}</span>
+                      <span className="font-medium">{currencySymbol} {subtotal.toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-gray-600">Shipping</span>
                       <span className="font-medium">
-                        {selectedDeliveryMethod ? ` ${currencySymbol} ${selectedDeliveryMethod.price.toFixed(2)}` : '-'}
+                        {selectedDeliveryMethod?.price === 0 
+                          ? 'Free' 
+                          : selectedDeliveryMethod 
+                            ? `${currencySymbol} ${selectedDeliveryMethod.price.toFixed(2)}` 
+                            : '-'
+                        }
                       </span>
                     </div>
                     <Separator />
                     <div className="flex justify-between items-center pt-1">
                       <span className="font-semibold">Total</span>
-                      <span className="font-semibold text-lg">{currencySymbol} &nbsp;{calculatedTotal.toFixed(2)}</span>
+                      <span className="font-semibold text-lg">{currencySymbol} {calculatedTotal.toFixed(2)}</span>
                     </div>
                   </div>
                 </CardContent>

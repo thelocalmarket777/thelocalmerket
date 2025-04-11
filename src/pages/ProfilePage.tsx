@@ -106,14 +106,14 @@ const ProfilePage = () => {
             <div className="bg-white rounded-lg border border-gray-200 p-6">
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-xl font-semibold">Personal Information</h2>
-                {!isEditing && (
+                {/* {!isEditing && (
                   <Button 
                     variant="outline" 
                     onClick={() => setIsEditing(true)}
                   >
                     Edit Profile
                   </Button>
-                )}
+                )} */}
               </div>
 
               <form onSubmit={handleSubmit}>

@@ -1,53 +1,13 @@
-import React, { useEffect, useState } from 'react';
-import { useParams, Link, useLocation } from 'react-router-dom';
-import MainLayout from '@/components/layout/MainLayout';
-import { Button } from '@/components/ui/button';
-import { Order } from '@/types';
-import { CheckCircle, ArrowRight, AlertCircle, Image as ImageIcon } from 'lucide-react';
-import RemoteServices from '@/RemoteService/Remoteservice';
+import React from 'react';
+import { CheckCircle, ArrowRight } from 'lucide-react';
+import { useLocation } from 'react-router-dom';
 
-// Loading state component
-const OrderLoadingState = () => (
-  <MainLayout>
-    <div className="container mx-auto px-4 py-12">
-      <div className="max-w-3xl mx-auto bg-white rounded-lg border border-gray-200 p-8">
-        <div className="animate-pulse space-y-4">
-          <div className="h-8 bg-gray-100 rounded w-3/4 mx-auto"></div>
-          <div className="h-4 bg-gray-100 rounded w-1/2 mx-auto"></div>
-          <div className="h-32 bg-gray-100 rounded"></div>
-          <div className="h-24 bg-gray-100 rounded"></div>
-          <div className="h-12 bg-gray-100 rounded w-1/3 mx-auto"></div>
-        </div>
-      </div>
-    </div>
-  </MainLayout>
-);
-
-// Error state component
-const OrderErrorState: React.FC<{ error: string | null }> = ({ error }) => (
-  <MainLayout>
-    <div className="container mx-auto px-4 py-12">
-      <div className="max-w-3xl mx-auto bg-white rounded-lg border border-gray-200 p-8 text-center">
-        <div className="inline-flex items-center justify-center bg-red-100 rounded-full w-16 h-16 mb-4">
-          <AlertCircle className="text-red-600" size={32} />
-        </div>
-        <h1 className="text-2xl font-bold mb-4">Order Not Found</h1>
-        <p className="mb-6">{error || "The order you're looking for doesn't exist."}</p>
-        <Button asChild>
-          <Link to="/">Return to Home</Link>
-        </Button>
-      </div>
-    </div>
-  </MainLayout>
-);
-
-// Utility functions
-const formatCurrency = (amount: number | string | undefined): string => {
-  const value = typeof amount === 'string' ? parseFloat(amount) : amount;
-  return `NPR ${(value || 0).toFixed(2)}`;
+// Utility functions from the original component
+const formatCurrency = (amount) => {
+  return `NPR ${(amount || 0).toFixed(2)}`;
 };
 
-const formatDate = (dateString?: string): string => {
+const formatDate = (dateString) => {
   if (!dateString) return 'Unknown date';
   return new Date(dateString).toLocaleDateString('en-US', {
     year: 'numeric',
@@ -56,59 +16,40 @@ const formatDate = (dateString?: string): string => {
   });
 };
 
-const capitalizeFirstLetter = (str?: string, fallback = ''): string => {
+const capitalizeFirstLetter = (str, fallback = '') => {
   if (!str) return fallback;
   return str.charAt(0).toUpperCase() + str.slice(1);
 };
 
-const OrderConfirmationPage = () => {
-  const { id } = useParams<{ id: string }>();
-  const { state } = useLocation();
-  const [order, setOrder] = useState<Order | null>(() => {
-    const localOrder = localStorage.getItem('orderconform');
-    return state?.orderConfirm || (localOrder ? JSON.parse(localOrder) : null);
-  });
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const fetchOrder = async () => {
-      if (order) {
-        setIsLoading(false);
-        return;
-      }
-      
-      try {
-        setIsLoading(true);
-        const response = await RemoteServices.getOderdetailsbyId(id);
-        if (response?.data) {
-          setOrder(response.data);
-          localStorage.setItem('orderconform', JSON.stringify(response.data));
-        } else {
-          setError('Order not found');
-        }
-      } catch (error) {
-        console.error('Error fetching order:', error);
-        setError('Failed to load order details');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchOrder();
-
-    // Cleanup localStorage on unmount
-    return () => {
-      localStorage.removeItem('orderconform');
-    };
-  }, [id, order]);
-
-  if (isLoading) return <OrderLoadingState />;
-  if (error || !order) return <OrderErrorState error={error} />;
-
+export default function OrderConfirmation() {
+  
+  // The order data provided in the JSON
+  const {state}=useLocation()
+  const order =state.oderconform
+  // const order = {
+  //   id: "a45bd5ee-73b3-485c-9abe-fcc5e0c14b5c",
+  //   user_id: "4200e2bf-8bf8-40b1-ab90-06dc326c82b2",
+  //   items: [
+  //     {
+  //       quantity: 2,
+  //       price: "300.00",
+  //       category: "",
+  //       product_name: "Answer to an Enemy of Islam"
+  //     }
+  //   ],
+  //   total: 600.0,
+  //   status: "pending",
+  //   delivery_method: "pickup",
+  //   delivery_address: "Store Pickup",
+  //   created_at: "2025-04-11T17:28:42.793657Z",
+  //   sub_total: 600.0,
+  //   shipping_cost: 0.0,
+  //   ReceiverContact: "9866206703"
+  // };
+  
   return (
-    <MainLayout>
-      <div className="container mx-auto px-4 py-12">
+    <div className="bg-gray-50 min-h-screen py-8">
+      <div className="container mx-auto px-4">
         <div className="max-w-3xl mx-auto bg-white rounded-lg border border-gray-200 p-8">
           {/* Order confirmation header */}
           <div className="text-center mb-8">
@@ -117,7 +58,7 @@ const OrderConfirmationPage = () => {
             </div>
             <h1 className="text-3xl font-bold text-gray-900 mb-2">Order Confirmed!</h1>
             <p className="text-gray-600">
-              Your order has been placed and will be shipped soon.
+              Your order has been placed and will be processed soon.
             </p>
           </div>
 
@@ -125,7 +66,7 @@ const OrderConfirmationPage = () => {
             {/* Order details header */}
             <div className="flex justify-between mb-4">
               <div>
-                <h2 className="text-lg font-semibold">Order #{order.id}</h2>
+                <h2 className="text-lg font-semibold">Order #{order.id.substring(0, 8)}...</h2>
                 <p className="text-gray-500">Placed on {formatDate(order.created_at)}</p>
               </div>
               <div>
@@ -138,9 +79,12 @@ const OrderConfirmationPage = () => {
             {/* Delivery information */}
             <div className="bg-gray-50 rounded-lg p-4 mb-6">
               <h3 className="font-medium mb-2">Delivery Information</h3>
-              <p className="text-gray-700">{order?.delivery_address || 'Address not provided'}</p>
+              <p className="text-gray-700">{order.delivery_address || 'Address not provided'}</p>
               <p className="text-gray-700 mt-2">
-                Delivery Method: {capitalizeFirstLetter(order?.delivery_method, 'Standard')} Shipping
+                Delivery Method: {capitalizeFirstLetter(order.delivery_method, 'Standard')} 
+              </p>
+              <p className="text-gray-700 mt-2">
+                Contact: {order.ReceiverContact || 'Not provided'}
               </p>
             </div>
 
@@ -148,29 +92,20 @@ const OrderConfirmationPage = () => {
             <div className="mb-6">
               <h3 className="font-medium mb-4">Order Items</h3>
               <div className="space-y-4">
-               
-                {order?.order_items?.map((item,index) => (
+                {order.items.map((item, index) => (
                   <div key={index} className="flex items-center">
-                    {/* {item?.product?.media && item.product.media.length > 0 ? (
-                      <img 
-                        src={item.product.media[0].file} 
-                        alt={item.product.name}
-                        className="w-16 h-16 object-cover rounded"
-                      />
-                    ) : (
-                      <div className="w-16 h-16 bg-gray-100 rounded flex items-center justify-center">
-                        <ImageIcon className="text-gray-400" size={24} />
-                      </div>
-                    )} */}
+                    <div className="w-16 h-16 bg-gray-100 rounded flex items-center justify-center">
+                      <span className="text-gray-400 text-xs">No image</span>
+                    </div>
                     <div className="ml-4 flex-1">
-                      <h4 className="font-medium">{item?.product_name}</h4>
+                      <h4 className="font-medium">{item.product_name}</h4>
                       <p className="text-sm text-gray-500">
-                        Qty: {item?.quantity || 0} × {formatCurrency(item?.price)}
+                        Qty: {item.quantity} × {formatCurrency(parseFloat(item.price))}
                       </p>
                     </div>
                     <div className="text-right">
                       <p className="font-medium">
-                        {formatCurrency((item?.quantity ) * parseFloat(item?.price ))}
+                        {formatCurrency(item.quantity * parseFloat(item.price))}
                       </p>
                     </div>
                   </div>
@@ -182,43 +117,33 @@ const OrderConfirmationPage = () => {
             <div className="border-t border-gray-200 pt-4">
               <div className="flex justify-between mb-2">
                 <span className="text-gray-600">Subtotal</span>
-                <span>{formatCurrency(order.subtotal )}</span>
+                <span>{formatCurrency(order.sub_total)}</span>
               </div>
               <div className="flex justify-between mb-2">
                 <span className="text-gray-600">Shipping</span>
-                <span>{formatCurrency(order.shipping_cost )}</span>
+                <span>{formatCurrency(order.shipping_cost)}</span>
               </div>
-              {order.tax && (
-                <div className="flex justify-between mb-2">
-                  <span className="text-gray-600">Tax</span>
-                  <span>{formatCurrency(order.tax)}</span>
-                </div>
-              )}
               <div className="flex justify-between font-semibold text-lg">
                 <span>Total</span>
-                <span>{formatCurrency(order.total_amount)}</span>
+                <span>{formatCurrency(order.total)}</span>
               </div>
             </div>
           </div>
 
           {/* Action buttons */}
           <div className="text-center space-y-4">
-            <Button asChild>
-              <Link to="/orders" className="flex items-center justify-center gap-2">
-                View All Orders
-                <ArrowRight size={16} />
-              </Link>
-            </Button>
+            <a href='/orders' className="bg-blue-600 text-white px-6 py-2 rounded-md flex items-center justify-center gap-2 mx-auto">
+              View All Orders
+              <ArrowRight size={16} />
+            </a>
             <div>
-              <Link to="/" className="text-brand-blue hover:underline">
+              <a href="/" className="text-blue-600 hover:underline">
                 Continue Shopping
-              </Link>
+              </a>
             </div>
           </div>
         </div>
       </div>
-    </MainLayout>
+    </div>
   );
-};
-
-export default OrderConfirmationPage;
+}

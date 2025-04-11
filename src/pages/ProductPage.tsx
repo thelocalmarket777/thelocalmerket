@@ -38,6 +38,7 @@ import {
   TabsTrigger,
 } from "@/components/ui/tabs";
 import { Badge } from '@/components/ui/badge';
+import Shippinginfo from '@/components/ui/shippinginfo';
 
 const fallbackImage =
   "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ac/No_image_available.svg/450px-No_image_available.svg.png";
@@ -60,13 +61,13 @@ const ProductPage = () => {
   const [activeTab, setActiveTab] = useState("all");
   
   // Sample user ID for demonstration
-  const currentUserId = "user123"; 
+  const currentUserId = id; 
 
   // Check if discount is available
   const hasDiscount = product?.discount && product?.discount > 0;
-  const discountedPrice = hasDiscount 
-    ? product?.price - (product?.price * (product?.discount / 100))
-    : product?.price;
+  const discountedPrice = hasDiscount && product?.price && product?.discount
+    ? product.price - (product.price * (product.discount / 100))
+    : product?.price ?? 0;
 
   // Fetch product and reviews by ID
   const fetchProduct = useCallback(async () => {
@@ -75,6 +76,7 @@ const ProductPage = () => {
     setIsLoading(true);
     try {
       const res = await RemoteServices.getById(id);
+      console.log('data',res)
       if (res.status === 200) {
         setProduct(res.data);
         setMediaItems(res.data.media || []);
@@ -89,14 +91,7 @@ const ProductPage = () => {
       const reviewRes = await RemoteServices.getReviewOnProduct(id);
       if (reviewRes.status === 200) {
         // Add sample data for demonstration
-        const reviewsWithSampleData = reviewRes.data.map(review => ({
-          ...review,
-          date: review.date || new Date().toLocaleDateString(),
-          likes: review.likes || Math.floor(Math.random() * 10),
-          likedBy: review.likedBy || [],
-          user: review.user || "Anonymous User"
-        }));
-        setReviews(reviewsWithSampleData);
+       
       } else {
         toast({
           title: "Error",
@@ -112,11 +107,55 @@ const ProductPage = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [id, toast]);
+  }, [id]);
 
   useEffect(() => {
-    fetchProduct();
-  }, [fetchProduct]);
+    let mounted = true;
+    
+    const fetchData = async () => {
+      if (!id) return;
+      setIsLoading(true);
+      try {
+        const res = await RemoteServices.getById(id);
+        if (res.status === 200 && mounted) {
+          // Update product data
+          setProduct(res.data.product);
+          
+          // Set media items if they exist
+          setMediaItems(res.data.product.media || []);
+          
+          // Process reviews with consistent data structure
+          const processedReviews = res.data.product.reviews.map(review => ({
+            ...review,
+            date: new Date(review.created_at).toLocaleDateString(),
+            likes: review.likes || 0,
+            likedBy: review.likedBy || [],
+            user: review.user || 'Anonymous'
+          }));
+          
+          setReviews(processedReviews);
+        }
+      } catch (error) {
+        if (mounted) {
+          console.error(error);
+          toast({
+            title: "Error",
+            description: "Failed to fetch product details",
+          });
+        }
+      } finally {
+        if (mounted) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    fetchData();
+
+    return () => {
+      mounted = false;
+    };
+  }, [id]);
 
   // Handle quantity change with bounds checking
   const handleQuantityChange = (value: number) => {
@@ -187,42 +226,36 @@ const ProductPage = () => {
     if (!reviewText.trim()) return;
 
     const reviewData = {
-      productId: product?.id,
+      product: product?.id,
       rating: reviewRating,
       comment: reviewText.trim(),
+      user: currentUserId
     };
 
     setIsSubmittingReview(true);
     try {
       const res = await RemoteServices.createReviewOnProduct(reviewData);
       if (res.status === 200) {
-        // Add sample data for the new review
         const newReview = {
           ...res.data,
-          date: new Date().toLocaleDateString(),
+          date: new Date(res.data.created_at).toLocaleDateString(),
           likes: 0,
           likedBy: [],
-          user: "Current User" // In real app, use actual username
         };
         
         setReviews(prev => [newReview, ...prev]);
         setReviewText('');
         setReviewRating(5);
         toast({
-          title: "Review submitted",
-          description: "Thank you for your feedback!",
-        });
-      } else {
-        toast({
-          title: "Error",
-          description: "Failed to submit review.",
+          title: "Success",
+          description: "Review submitted successfully!",
         });
       }
     } catch (error) {
       console.error("Error submitting review:", error);
       toast({
         title: "Error",
-        description: "An unexpected error occurred.",
+        description: "Failed to submit review",
       });
     } finally {
       setIsSubmittingReview(false);
@@ -458,7 +491,7 @@ const ProductPage = () => {
                 </div>
               </div>
             ) : (
-              renderProductImage(product?.imageUrl, product?.name)
+              renderProductImage(product?.image_url, product?.name)
             )}
           </div>
 
@@ -579,23 +612,8 @@ const ProductPage = () => {
               </Button>
             </div>
             
-            {/* Shipping information */}
-            <div className="border-t border-gray-200 pt-6 space-y-4">
-              <div className="flex items-start gap-3">
-                <Truck className="text-gray-400 mt-0.5" size={20} />
-                <div>
-                  <h4 className="font-medium text-gray-900">Free Shipping</h4>
-                  <p className="text-sm text-gray-500">On orders over Rs 500. Otherwise RS 80.</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <Package className="text-gray-400 mt-0.5" size={20} />
-                <div>
-                  <h4 className="font-medium text-gray-900">Easy Returns</h4>
-                  <p className="text-sm text-gray-500">30 day return policy. Return for any reason.</p>
-                </div>
-              </div>
-            </div>
+       
+           <Shippinginfo/>
           </div>
         </div>
 

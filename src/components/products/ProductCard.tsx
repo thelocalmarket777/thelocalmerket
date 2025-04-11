@@ -4,6 +4,8 @@ import { Heart, ShoppingCart, ShoppingBag, Tag } from 'lucide-react';
 import { Product } from '@/types';
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/contexts/CartContext';
+import RemoteServices from '@/RemoteService/Remoteservice';
+import { useToast } from '@/hooks/use-toast';
 
 interface ProductCardProps {
   product: Product;
@@ -12,7 +14,7 @@ interface ProductCardProps {
 const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const { addItem } = useCart();
   const currencySymbol = 'NPR';
-  
+  const { toast } = useToast();
   // Check if discount is available
   const hasDiscount = product?.discount && product?.discount > 0;
   const afterDiscountAmount = hasDiscount 
@@ -68,7 +70,20 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         onClick={(e) => {
           e.preventDefault();
           e.stopPropagation();
-          // Add wishlist functionality
+          RemoteServices.createwishlist({product_id:product.id}).then((res) => {
+            toast({
+                title: 'Added to wish list Successfully',
+                description: res.data.message,
+            });
+
+        }).catch(error => {
+            toast({
+                variant: 'destructive',
+                title: ' Failed',
+                description: 'An error occurred ',
+            });
+        })
+         
         }}
       >
         <Heart size={20} />
@@ -86,10 +101,10 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
 
       {/* Product image */}
       <div className="h-48 w-full overflow-hidden bg-gray-50">
-        {(product.imageUrl !== '' || product.media?.length > 0) ? (
-          product.imageUrl !== '' ? (
+        {(product.image_url !== '' || product.media?.length > 0) ? (
+          product.image_url !== '' ? (
             <img
-              src={product.imageUrl}
+              src={product.image_url}
               alt={product.name}
               className="h-full w-full object-cover object-center group-hover:opacity-90"
             />

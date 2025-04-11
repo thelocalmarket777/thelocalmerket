@@ -16,10 +16,10 @@ const LoginPage = () => {
   const location = useLocation();
   const from = location.state?.from || '/';
   const { toast } = useToast();
-  
+
   // UI state
   const [activeTab, setActiveTab] = useState<'login' | 'register' | 'forgot'>('login');
-  
+
   // Login form state
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
@@ -36,7 +36,7 @@ const LoginPage = () => {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [isRegisterLoading, setIsRegisterLoading] = useState(false);
   const [registerError, setRegisterError] = useState<string | null>(null);
-  
+
   // Forgot password state
   const [forgotEmail, setForgotEmail] = useState('');
   const [isForgotLoading, setIsForgotLoading] = useState(false);
@@ -68,22 +68,22 @@ const LoginPage = () => {
 
     setIsLoginLoading(true);
     try {
-      const response = await RemoteServices.loginPost({ 
-        email: loginEmail, 
-        password: loginPassword 
+      const response = await RemoteServices.loginPost({
+        email: loginEmail,
+        password: loginPassword
       });
-      
+
       if (response.status === 200) {
         const user: User = response.data.user;
         localStorage.setItem('user', JSON.stringify(user));
         localStorage.setItem('token', response.data.access);
         localStorage.setItem('refresh_token', response.data.refresh);
-        
+
         toast({
           title: 'Login Successful',
           description: `Welcome back, ${user.name || 'User'}!`,
         });
-        
+
         setTimeout(() => {
           navigate(from);
         }, 1500);
@@ -128,20 +128,20 @@ const LoginPage = () => {
 
     setIsRegisterLoading(true);
     try {
-      const response = await RemoteServices.register({ 
-        email: registerEmail, 
-        password: registerPassword, 
-        name: registerName, 
-        address, 
-        phone_number: phoneNumber 
+      const response = await RemoteServices.register({
+        email: registerEmail,
+        password: registerPassword,
+        name: registerName,
+        address,
+        phone_number: phoneNumber
       });
-      
+
       if (response.status === 201) {
         toast({
           title: 'Registration Successful',
           description: `Thank you for registering, ${registerName}!`,
         });
-        
+
         // Clear form
         setRegisterName('');
         setRegisterEmail('');
@@ -149,13 +149,13 @@ const LoginPage = () => {
         setRegisterConfirmPassword('');
         setAddress('');
         setPhoneNumber('');
-        
+
         // Switch to login tab
         setActiveTab('login');
       }
     } catch (error) {
       console.error('Registration error:', error);
-      
+
       // Handle specific error messages from the backend
       if (error.response?.data?.email) {
         setRegisterError(`Email error: ${error.response.data.email[0]}`);
@@ -164,7 +164,7 @@ const LoginPage = () => {
       } else {
         setRegisterError('Registration failed. Please try again.');
       }
-      
+
       toast({
         title: "Registration Failed",
         description: "There was a problem creating your account. Please try again.",
@@ -177,7 +177,7 @@ const LoginPage = () => {
 
   const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!forgotEmail) {
       toast({
         title: "Error",
@@ -200,7 +200,7 @@ const LoginPage = () => {
     try {
       // Send request for OTP
       await RemoteServices.forgottenPassword({ email: forgotEmail });
-      
+
       setResetSent(true);
       setShowOtpVerification(true);
       toast({
@@ -218,71 +218,71 @@ const LoginPage = () => {
       setIsForgotLoading(false);
     }
   };
-  
+
   const handleVerifyOtp = async (e: React.FormEvent) => {
     e.preventDefault();
     setOtpError(null);
-    
+
     // Validation
     if (!otp) {
       setOtpError('Please enter the verification code');
       return;
     }
-    
+
     if (!newPassword) {
       setOtpError('Please enter a new password');
       return;
     }
-    
+
     if (newPassword.length < 8) {
       setOtpError('Password must be at least 8 characters long');
       return;
     }
-    
+
     if (newPassword !== confirmNewPassword) {
       setOtpError('Passwords do not match');
       return;
     }
-    
+
     setIsVerifyingOtp(true);
     try {
       // Send OTP verification request
-      await RemoteServices.verfiyOtpPassord({ 
+      await RemoteServices.verfiyOtpPassord({
         email: forgotEmail,
         otp: otp,
         new_password: newPassword
       });
-      
+
       setResetSuccess(true);
       setShowOtpVerification(false);
-      
+
       toast({
         title: "Password Reset Successful",
         description: "Your password has been successfully reset. You can now login with your new password.",
       });
-      
+
       // Reset form fields
       setOtp('');
       setNewPassword('');
       setConfirmNewPassword('');
-      
+
       // Give user time to read the success message before redirecting
       setTimeout(() => {
         setActiveTab('login');
         setResetSent(false);
         setResetSuccess(false);
       }, 3000);
-      
+
     } catch (error: any) {
       console.error('OTP verification error:', error);
-      
+
       // Handle specific error messages from the backend
       if (error.response?.data?.detail) {
         setOtpError(error.response.data.detail);
       } else {
         setOtpError('Verification failed. Please try again.');
       }
-      
+
       toast({
         title: "Verification Failed",
         description: "The verification code is invalid or has expired.",
@@ -292,7 +292,7 @@ const LoginPage = () => {
       setIsVerifyingOtp(false);
     }
   };
-  
+
   // Reset the forgot password flow
   const handleResetPasswordFlow = () => {
     setForgotEmail('');
@@ -307,33 +307,34 @@ const LoginPage = () => {
   };
 
 
-  
+
   const handleGoogleLogin = async (credentialResponse) => {
     setIsGoogleLoading(true);
     const id_token = credentialResponse.credential;
-  
+    //  const address :'https://backendshop-production-963a.up.railway.app/api/'
+    const address = 'http://localhost:8080/api/'
     try {
-      const response = await fetch('https://backendshop-production-963a.up.railway.app/api/account/auth/google/login/', {
+      const response = await fetch(`${address}account/auth/google/login/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ id_token }),
       });
-  
+
       const data = await response.json(); // Properly parse the JSON body
-  
+
       if (response.ok) {
         const user = data.user;
         localStorage.setItem('user', JSON.stringify(user));
         localStorage.setItem('token', data.access_token);
         localStorage.setItem('refresh_token', data.refresh_token);
-  
+
         toast({
           title: 'Login Successful',
           description: `Welcome back, ${user?.name || 'User'}!`,
         });
-  
+
         setTimeout(() => {
           navigate('/');
         }, 1500);
@@ -355,8 +356,8 @@ const LoginPage = () => {
       setIsGoogleLoading(false);
     }
   };
-  
-  
+
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
@@ -378,8 +379,8 @@ const LoginPage = () => {
           {activeTab === 'login' && 'Sign in to your account or create a new one'}
           {activeTab === 'register' && 'Fill in your details to get started'}
           {activeTab === 'forgot' && (
-            showOtpVerification 
-              ? 'Enter the verification code sent to your email' 
+            showOtpVerification
+              ? 'Enter the verification code sent to your email'
               : 'Enter your email to receive reset instructions'
           )}
         </p>
@@ -388,8 +389,8 @@ const LoginPage = () => {
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-white py-8 px-4 shadow-lg sm:rounded-xl sm:px-10 border border-gray-100">
           {activeTab !== 'forgot' ? (
-            <Tabs 
-              value={activeTab === 'register' ? 'register' : 'login'} 
+            <Tabs
+              value={activeTab === 'register' ? 'register' : 'login'}
               className="w-full"
               onValueChange={(val) => setActiveTab(val as 'login' | 'register')}
             >
@@ -416,9 +417,9 @@ const LoginPage = () => {
                   <div>
                     <div className="flex items-center justify-between">
                       <Label htmlFor="password" className="font-medium">Password</Label>
-                      <button 
+                      <button
                         type="button"
-                        onClick={() => setActiveTab('forgot')} 
+                        onClick={() => setActiveTab('forgot')}
                         className="text-sm text-brand-blue hover:underline"
                       >
                         Forgot password?
@@ -451,9 +452,9 @@ const LoginPage = () => {
                   </Button>
                 </form>
                 <GoogleLoginButton
-  onGoogleLogin={handleGoogleLogin}
-  isLoading={isGoogleLoading}
-/>
+                  onGoogleLogin={handleGoogleLogin}
+                  isLoading={isGoogleLoading}
+                />
               </TabsContent>
 
               <TabsContent value="register">
@@ -595,7 +596,7 @@ const LoginPage = () => {
                       We'll send you a verification code to reset your password
                     </p>
                   </div>
-                  
+
                   <Button
                     type="submit"
                     className="w-full"
@@ -603,7 +604,7 @@ const LoginPage = () => {
                   >
                     {isForgotLoading ? 'Sending...' : 'Send Verification Code'}
                   </Button>
-                  
+
                   <div className="text-center">
                     <button
                       type="button"
@@ -632,7 +633,7 @@ const LoginPage = () => {
                       Enter the verification code sent to {forgotEmail}
                     </p>
                   </div>
-                  
+
                   <div>
                     <Label htmlFor="new-password" className="font-medium">New Password</Label>
                     <Input
@@ -645,7 +646,7 @@ const LoginPage = () => {
                       required
                     />
                   </div>
-                  
+
                   <div>
                     <Label htmlFor="confirm-new-password" className="font-medium">Confirm New Password</Label>
                     <Input
@@ -658,14 +659,14 @@ const LoginPage = () => {
                       required
                     />
                   </div>
-                  
+
                   {otpError && (
                     <div className="text-sm text-red-600 bg-red-50 p-3 rounded-md flex items-start">
                       <AlertCircle className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0" />
                       <span>{otpError}</span>
                     </div>
                   )}
-                  
+
                   <Button
                     type="submit"
                     className="w-full"
@@ -673,7 +674,7 @@ const LoginPage = () => {
                   >
                     {isVerifyingOtp ? 'Verifying...' : 'Reset Password'}
                   </Button>
-                  
+
                   <div className="flex justify-between text-sm">
                     <button
                       type="button"
@@ -685,7 +686,7 @@ const LoginPage = () => {
                     >
                       Try another email
                     </button>
-                    
+
                     <button
                       type="button"
                       onClick={() => handleForgotPassword(new Event('click') as any)}
@@ -725,7 +726,7 @@ const LoginPage = () => {
                     >
                       Back to login
                     </button>
-                    
+
                     <button
                       type="button"
                       onClick={() => handleForgotPassword(new Event('click') as any)}

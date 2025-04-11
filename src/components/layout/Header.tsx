@@ -165,11 +165,11 @@ const Header = () => {
           {/* Action Buttons */}
           <div className="flex items-center gap-1">
             <div className="hidden md:flex items-center gap-1">
-              {/* <Link to="/wishlist">
+              <Link to="/wishlist">
                 <Button variant="ghost" size="sm" className="text-gray-600 hover:text-teal-600 hover:bg-teal-50">
                   <Heart size={18} />
                 </Button>
-              </Link> */}
+              </Link>
               <Link to="/cart">
                 <Button variant="ghost" size="sm" className="relative text-gray-600 hover:text-teal-600 hover:bg-teal-50">
                   <ShoppingCart size={18} />

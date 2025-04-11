@@ -2,8 +2,8 @@ import axios from 'axios';
 import { get } from 'http';
 
 const remote = {
-  // address: 'http://127.0.0.1:8000/api/', 
-  address: 'https://backendshop-production-963a.up.railway.app/api/', 
+  address: 'http://127.0.0.1:8000/api/', 
+  // address: 'https://backendshop-production-963a.up.railway.app/api/', 
 };
 
 const getAccessToken = () => localStorage.getItem("token");
@@ -135,6 +135,13 @@ const RemoteServices = {
 
   createReviewOnProduct: (data) => postRequest("inventory/createreview/", data),
   getReviewOnProduct: (id) => getRequest(`inventory/reviews/${id}/`),
+
+
+  getwishlistfile: () => getRequest(`inventory/wishlist/get/`),
+  deletewishlistfile: (id) => deleteRequest(`inventory/wishlist/delete/?product_id=${id}`),
+
+  createwishlist :(data)=>postRequest("inventory/wishlist/add/", data),
+  createcartlist :(data)=>postRequest("inventory/wishlist/add/", data),
 };
 
 export default RemoteServices;

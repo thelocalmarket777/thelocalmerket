@@ -3,13 +3,14 @@ import { Link } from 'react-router-dom';
 import MainLayout from '@/components/layout/MainLayout';
 import { Button } from '@/components/ui/button';
 import { Order } from '@/types';
-import { Package, User as UserIcon, ExternalLink, ImageIcon, AlertCircle } from 'lucide-react';
+import { Package, User as UserIcon, ExternalLink, ImageIcon, AlertCircle, ChevronDown, ChevronUp, Gift } from 'lucide-react';
 import RemoteServices from '@/RemoteService/Remoteservice';
 
 const OrdersPage = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [expandedOrders, setExpandedOrders] = useState<Record<string, boolean>>({});
   
   const token = localStorage.getItem('token') !== null;
   const user = token ? JSON.parse(localStorage.getItem('user') || '{}') : null;
@@ -22,7 +23,15 @@ const OrdersPage = () => {
     
     try {
       const response = await RemoteServices.orderPlacedAllDetails();
-      setOrders(response.data || []);
+      const ordersData = response.data || [];
+      setOrders(ordersData);
+      
+      // Initialize expanded state for all orders (first one expanded by default)
+      const initialExpandedState = ordersData.reduce((acc, order, index) => {
+        acc[order.id] = index === 0; // First order expanded by default
+        return acc;
+      }, {});
+      setExpandedOrders(initialExpandedState);
     } catch (err) {
       console.error('Error fetching orders:', err);
       setError('Failed to load your orders. Please try again later.');
@@ -38,6 +47,13 @@ const OrdersPage = () => {
       setIsLoading(false);
     }
   }, [user?.id, fetchOrders]);
+
+  const toggleOrderExpansion = (orderId) => {
+    setExpandedOrders(prev => ({
+      ...prev,
+      [orderId]: !prev[orderId]
+    }));
+  };
 
   if (!token) {
     return (
@@ -58,7 +74,7 @@ const OrdersPage = () => {
     );
   }
 
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString) => {
     try {
       return new Date(dateString).toLocaleDateString('en-US', {
         year: 'numeric',
@@ -70,7 +86,7 @@ const OrdersPage = () => {
     }
   };
 
-  const getStatusBadgeClass = (status: string) => {
+  const getStatusBadgeClass = (status) => {
     switch (status?.toLowerCase()) {
       case 'pending':
         return 'bg-yellow-100 text-yellow-800';
@@ -163,69 +179,112 @@ const OrdersPage = () => {
                 <div className="divide-y divide-gray-200">
                   {orders.map((order) => (
                     <div key={order?.id} className="p-6">
-                      <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-4">
-                        <div>
-                          <h3 className="text-lg font-medium">Order #{order?.id}</h3>
-                          <p className="text-sm text-gray-500">
-                            Placed on {formatDate(order?.created_at)}
-                          </p>
+                      {/* Order Header - Always visible */}
+                      <div 
+                        className="flex flex-col md:flex-row md:justify-between md:items-center mb-4 cursor-pointer"
+                        onClick={() => toggleOrderExpansion(order.id)}
+                      >
+                        <div className="flex items-center">
+                          {expandedOrders[order.id] ? (
+                            <ChevronUp size={20} className="text-gray-500 mr-2" />
+                          ) : (
+                            <ChevronDown size={20} className="text-gray-500 mr-2" />
+                          )}
+                          <div>
+                            <h3 className="text-lg font-medium">Order #{order?.id}</h3>
+                            <p className="text-sm text-gray-500">
+                              Placed on {formatDate(order?.created_at)}
+                            </p>
+                          </div>
                         </div>
                         <div className="mt-2 md:mt-0 flex items-center">
                           <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusBadgeClass(order?.status)}`}>
                             {order?.status}
                           </span>
-                          <Link 
-                            to={`/order-confirmation/${order?.id}`}
-                            state={{ orderConfirm: order }}
-                            className="ml-4 text-brand-blue hover:text-brand-blue/80 inline-flex items-center"
-                          >
-                            <span className="mr-1">View</span>
-                            <ExternalLink size={14} />
-                          </Link>
+                   
                         </div>
                       </div>
 
-                      <div className="space-y-4">
-                        {order?.items?.map((item) => (
-                          <div key={item?.id} className="flex items-center">
-                            {getProductImage(item) ? (
-                              <img 
-                                src={getProductImage(item)}
-                                alt={item?.product?.name}
-                                className="w-16 h-16 object-cover rounded"
-                                onError={(e) => {
-                                  (e.target as HTMLImageElement).src = '/path/to/fallback-image.jpg';
-                                  (e.target as HTMLImageElement).onerror = null;
-                                }}
-                              /> 
-                            ) : (
-                              <div className="w-16 h-16 bg-gray-100 rounded flex items-center justify-center">
-                                <ImageIcon className="text-gray-400" size={24} />
-                              </div>
-                            )}
-                            <div className="ml-4 flex-1">
-                              <Link 
-                                to={`/product/${item?.product?.id}`}
-                                className="font-medium hover:text-brand-blue"
-                              >
-                                {item?.product?.name || 'Unknown Product'}
-                              </Link>
-                              <p className="text-sm text-gray-500">
-                                Qty: {item?.quantity || 0}
-                              </p>
+                      {/* Order Details - Conditionally visible */}
+                      {expandedOrders[order.id] && (
+                        <div className="mt-4 pt-4 border-t border-gray-100">
+                          {/* Order Summary */}
+                          <div className="mb-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                              <h4 className="text-sm font-medium text-gray-500 mb-1">Delivery Method</h4>
+                              <p className="text-sm font-medium">{order.delivery_method || 'N/A'}</p>
                             </div>
-                            <div className="text-right">
-                              <p className="font-medium">
-                                NPR &nsbp;{((parseFloat(item?.price) || 0) * (item?.quantity || 0)).toFixed(2)}
-                              </p>
+                            <div>
+                              <h4 className="text-sm font-medium text-gray-500 mb-1">Payment Method</h4>
+                              <p className="text-sm font-medium">{order.payment_method || 'N/A'}</p>
+                            </div>
+                            <div>
+                              <h4 className="text-sm font-medium text-gray-500 mb-1">Shipping Address</h4>
+                              <p className="text-sm font-medium">{order.shipping_address || 'N/A'}</p>
+                            </div>
+                            <div>
+                              <h4 className="text-sm font-medium text-gray-500 mb-1">Order Date</h4>
+                              <p className="text-sm font-medium">{formatDate(order?.created_at)}</p>
                             </div>
                           </div>
-                        ))}
-                      </div>
 
-                      <div className="mt-4 text-right">
-                        <p className="font-semibold">Total: NPR{(order?.total_amount )}</p>
-                      </div>
+                          {/* Order Items List */}
+                          <div className="bg-gray-50 rounded-lg p-4 mb-4">
+                            <h4 className="font-medium mb-3">Order Items</h4>
+                            <div className="space-y-4">
+                              {order?.order_items?.map((item, index) => (
+                                <div key={index} className="flex items-center">
+                                  <div className="w-16 h-16 bg-gray-100 rounded flex items-center justify-center overflow-hidden">
+                               <Gift />
+                                  </div>
+                                  <div className="ml-4 flex-1">
+                                  <div className="font-medium">
+                                    {item?.product_name || 'Unknown Product'}
+                                  </div>
+                                  <p className="text-sm text-gray-500">
+                                    {item?.category && <span>Category: {item.category}</span>}
+                                  </p>
+                                  <p className="text-sm text-gray-500">
+                                    Qty: {item?.quantity || 0}
+                                  </p>
+                                  </div>
+                                  <div className="text-right">
+                                  <p className="font-medium">
+                                    NPR {((parseFloat(item?.price) || 0) * (item?.quantity || 0)).toFixed(2)}
+                                  </p>
+                                  <p className="text-sm text-gray-500">
+                                    NPR {parseFloat(item?.price || 0).toFixed(2)} each
+                                  </p>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+
+                          {/* Order Summary */}
+                          <div className="mt-4 bg-gray-50 rounded-lg p-4">
+                            <div className="flex justify-between items-center mb-2">
+                              <span className="text-gray-600">Subtotal</span>
+                              <span>NPR {parseFloat(order?.subtotal || 0).toFixed(2)}</span>
+                            </div>
+                            <div className="flex justify-between items-center mb-2">
+                              <span className="text-gray-600">Shipping</span>
+                              <span>NPR {parseFloat(order?.shipping_cost || 0).toFixed(2)}</span>
+                            </div>
+                            <div className="flex justify-between items-center pt-2 border-t border-gray-200 font-semibold">
+                              <span>Total</span>
+                              <span>NPR {parseFloat(order?.total_amount || 0).toFixed(2)}</span>
+                            </div>
+                          </div>
+
+                          {order.notes && (
+                            <div className="mt-4 bg-blue-50 rounded-lg p-4 text-sm">
+                              <h4 className="font-medium mb-1">Order Notes</h4>
+                              <p>{order.notes}</p>
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>

@@ -18,6 +18,7 @@ import LoginPage from "./pages/LoginPage";
 import { AuthProvider } from "./contexts/AuthContext";
 import { CartProvider } from "./contexts/CartContext";
 import OrderPurchase from './pages/OrderPurchase';
+import Wishlist from './pages/Wishlist';
 
 const queryClient = new QueryClient();
 
@@ -35,8 +36,9 @@ const App = () => (
               <Route path="/category/:category" element={<CategoryPage />} />
               <Route path="/all" element={<CategoryPage />} />
               <Route path="/cart" element={<CartPage />} />
+              <Route path="/wishlist" element={<Wishlist />} />
               <Route path="/checkout" element={<CheckoutPage />} />
-              <Route path="/order-confirmation/:id" element={<OrderConfirmationPage />} />
+              <Route path="/order-confirmation/" element={<OrderConfirmationPage />} />
               <Route path="/orderConfirmation/:id" element={<OrderPurchase  />} />
               <Route path="/profile" element={<ProfilePage />} />
               <Route path="/orders" element={<OrdersPage />} />
