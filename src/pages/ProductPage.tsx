@@ -560,16 +560,16 @@ const ProductPage = () => {
               {hasDiscount ? (
                 <div className="flex items-center gap-2">
                   <span className="text-2xl font-bold text-red-600">
-                    NPR {discountedPrice.toFixed(2)}
+                    NPR {discountedPrice}
                   </span>
                   <span className="text-lg text-gray-500 line-through">
-                    NPR {product?.price?.toFixed(2)}
+                    NPR {product?.price}
                   </span>
                   <Badge className="bg-red-500 ml-2">Save {product?.discount}%</Badge>
                 </div>
               ) : (
                 <span className="text-2xl font-bold text-gray-900">
-                  NPR {product?.price?.toFixed(2)}
+                  NPR {product?.price}
                 </span>
               )}
             </div>
