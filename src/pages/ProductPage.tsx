@@ -70,44 +70,8 @@ const ProductPage = () => {
     : product?.price ?? 0;
 
   // Fetch product and reviews by ID
-  const fetchProduct = useCallback(async () => {
-    if (!id) return;
 
-    setIsLoading(true);
-    try {
-      const res = await RemoteServices.getById(id);
-      console.log('data',res)
-      if (res.status === 200) {
-        setProduct(res.data);
-        setMediaItems(res.data.media || []);
-      } else {
-        toast({
-          title: "Error",
-          description: "Failed to fetch product details.",
-        });
-      }
 
-      // Fetch reviews
-      const reviewRes = await RemoteServices.getReviewOnProduct(id);
-      if (reviewRes.status === 200) {
-        // Add sample data for demonstration
-       
-      } else {
-        toast({
-          title: "Error",
-          description: "Failed to fetch reviews.",
-        });
-      }
-    } catch (error) {
-      console.error("Error fetching product or reviews:", error);
-      toast({
-        title: "Error",
-        description: "An unexpected error occurred.",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  }, [id]);
 
   useEffect(() => {
     let mounted = true;
@@ -204,8 +168,7 @@ const ProductPage = () => {
       
       setReviews(updatedReviews);
       
-      // In a real app, you would make an API call like:
-      // await RemoteServices.likeReview(reviewId, currentUserId);
+  
       
       toast({
         title: "Success",
@@ -281,16 +244,23 @@ const ProductPage = () => {
   };
 
   // Helper to render product image with fallback
-  const renderProductImage = (src?: string, alt?: string) => (
-    <img
-      src={src || fallbackImage}
-      alt={alt || "Product image"}
-      className="w-full h-[500px] object-contain"
-      onError={(e) => {
-        e.currentTarget.src = fallbackImage;
-      }}
-    />
-  );
+  const renderProductImage = (src?: string, alt?: string) => {
+(
+      <div className="relative w-full h-[500px]">
+        <img
+          src={src}
+          alt={alt?.trim() || "Product image"}
+          className="w-full h-full object-contain transition-opacity duration-300"
+          loading="lazy"
+          onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
+            const target = e.currentTarget;
+            target.src = fallbackImage;
+            target.onerror = null; // Prevent infinite error loop
+          }}
+        />
+      </div>
+    );
+  };
 
   // Render rating stars
   const renderRating = (rating: number, size = 18) => (
@@ -491,26 +461,26 @@ const ProductPage = () => {
                 </div>
               </div>
             ) : (
-              renderProductImage(product?.image_url, product?.name)
+              renderProductImage(product.image_url, product?.name)
             )}
           </div>
 
           <div>
             <h1 className="text-3xl font-bold text-gray-900 mb-2">{product?.name}</h1>
             <div className="flex flex-wrap items-center gap-2 mb-3">
-              {product?.author && (
+              {product?.author !=='' && (
                 <Badge variant="outline" className="text-sm">Author: {product?.author}</Badge>
               )}
-              {product?.genre && (
+              {product?.genre  && (
                 <Badge variant="outline" className="text-sm">Genre: {product?.genre}</Badge>
               )}
-              {product?.totalpage && (
+              {product?.totalpage >0  && (
                 <Badge variant="outline" className="text-sm">Page: {product?.totalpage}</Badge>
               )}
               {product?.language && (
                 <Badge variant="outline" className="text-sm">Language: {product?.language}</Badge>
               )}
-              {product?.madeinwhere && (
+              {product?.madeinwhere  && (
                 <Badge variant="outline" className="text-sm">MFG: {product?.madeinwhere}</Badge>
               )}
               {product?.ageproduct && (
