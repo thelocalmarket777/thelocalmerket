@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link ,useNavigate} from 'react-router-dom';
 import { Heart, ShoppingCart, ShoppingBag, Tag } from 'lucide-react';
 import { Product } from '@/types';
 import { Button } from '@/components/ui/button';
@@ -16,6 +16,8 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const currencySymbol = 'NPR';
   const { toast } = useToast();
   // Check if discount is available
+
+  const navigate = useNavigate();
   const hasDiscount = product?.discount && product?.discount > 0;
   const afterDiscountAmount = hasDiscount 
     ? product?.price - (product?.price * (product?.discount / 100))
@@ -56,7 +58,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     // Add to cart first
     addItem(product, 1);
     // Redirect to checkout page
-    window.location.href = '/checkout';
+    navigate('/checkout');
   };
 
   return (

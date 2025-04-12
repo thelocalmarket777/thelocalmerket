@@ -654,6 +654,24 @@ const ProductPage = () => {
                 size="lg" 
                 className="gap-2"
                 aria-label="Add to wishlist"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  RemoteServices.createwishlist({product_id:product.id}).then((res) => {
+                    toast({
+                        title: 'Added to wish list Successfully',
+                        description: res.data.message,
+                    });
+        
+                }).catch(error => {
+                    toast({
+                        variant: 'destructive',
+                        title: ' Failed',
+                        description: 'An error occurred ',
+                    });
+                })
+                 
+                }}
               >
                 <Heart size={20} aria-hidden="true" />
                 Wishlist
