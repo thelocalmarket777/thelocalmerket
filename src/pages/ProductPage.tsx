@@ -220,7 +220,7 @@ const ProductPage = () => {
     }
 
     const reviewData = {
-      product: product?.id,
+      productId: product?.id,
       rating: reviewRating,
       comment: reviewText.trim(),
       user: currentUserId
