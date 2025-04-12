@@ -13,13 +13,14 @@ export interface Product {
   discount?: number;
   rating?: string;
   stock: number;
-  imageUrl?: string;
+  image_url?: string;
   media?: ProductMedia[];
   author?: string;
   genre?: string;
   // Add additional fields that might be used
   created_at?: string;
   updated_at?: string;
+  is_new?:Boolean;
 }
 
 export interface Review {
