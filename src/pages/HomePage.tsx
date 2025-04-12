@@ -258,7 +258,7 @@ const HomePage = () => {
               <h2 className="text-3xl font-bold mb-2">Shop by Category</h2>
               <p className="text-gray-600">Find exactly what you're looking for</p>
             </div>
-            <Link to="/shop" className="text-indigo-600 font-medium flex items-center hover:text-indigo-800 transition-colors">
+            <Link to="/category/all" className="text-indigo-600 font-medium flex items-center hover:text-indigo-800 transition-colors">
               View All Categories
               <ChevronRight size={16} className="ml-1" />
             </Link>
