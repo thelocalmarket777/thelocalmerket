@@ -187,7 +187,7 @@ const ProductPage = () => {
           };
         }
         return review;
-      });
+      })
       
       setReviews(updatedReviews);
       
