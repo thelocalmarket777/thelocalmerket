@@ -172,7 +172,6 @@ const ProductPage = () => {
     }
     
     try {
-      // For demonstration: in a real app, this would be an API call
       setReviews(prevReviews => prevReviews.map(review => {
         if (review.id === reviewId) {
           const isAlreadyLiked = review.likedBy?.includes(currentUserId);
@@ -187,22 +186,17 @@ const ProductPage = () => {
           };
         }
         return review;
-      });
-      
-      setReviews(updatedReviews);
-      
-      // In a real app, you would make an API call like:
-      // await RemoteServices.likeReview(reviewId, currentUserId);
+      }));
       
       toast({
-        title: "Success",
-        description: "Review like updated",
+        title: "Success", 
+        description: "Review like updated"
       });
     } catch (error) {
       console.error("Error liking review:", error);
       toast({
         title: "Error",
-        description: "Failed to update review like",
+        description: "Failed to update review like"
       });
     }
   }, [currentUserId, toast]);
