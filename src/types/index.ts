@@ -5,32 +5,40 @@ export interface ProductMedia {
   description?: string;
 }
 
-export interface Product {
-  id: string;
-  name: string;
-  price: number;
-  description?: string;
-  discount?: number;
-  rating?: string;
-  stock: number;
-  image_url?: string;
-  media?: ProductMedia[];
-  author?: string;
-  genre?: string;
-  // Add additional fields that might be used
-  created_at?: string;
-  updated_at?: string;
-}
+
 
 export interface Review {
   id: string;
-  productId: string;
-  user: string;
   rating: number;
   comment: string;
-  date: string;
-  helpful?: number;
+  user: string;
+  created_at: string;
+  likes: number;
+  likedBy: string[];
 }
+
+export interface Product {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  finalprice?: number;
+  discount?: number;
+  stock: number;
+  rating: number;
+  image_url?: string;
+  author?: string;
+  genre?: string;
+  totalpage?: number;
+  language?: string;
+  madeinwhere?: string;
+  ageproduct?: string;
+  isNew?: boolean;
+  media?: ProductMedia[];
+  reviews: Review[];
+}
+
+
 
 export interface User {
   id: string;

@@ -24,7 +24,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Calculate derived values
   const itemCount = items.reduce((count, item) => count + item.quantity, 0);
-  const subtotal = items.reduce((total, item) => total + (item.product.price * item.quantity), 0);
+  const subtotal = items.reduce((total, item) => total + (item.product.finalprice * item.quantity), 0);
 
   useEffect(() => {
     setIsLoading(false);
@@ -67,6 +67,8 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const clearCart = () => {
     setItems([]);
   };
+
+
 
   return (
     <CartContext.Provider value={{

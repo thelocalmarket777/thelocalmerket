@@ -65,9 +65,7 @@ const ProductPage = () => {
 
   // Check if discount is available
   const hasDiscount = product?.discount && product?.discount > 0;
-  const discountedPrice = hasDiscount && product?.price && product?.discount
-    ? product.price - (product.price * (product.discount / 100))
-    : product?.price ?? 0;
+
 
   // Fetch product and reviews by ID
 
@@ -245,7 +243,7 @@ const ProductPage = () => {
 
   // Helper to render product image with fallback
   const renderProductImage = (src?: string, alt?: string) => {
-(
+     return(
       <div className="relative w-full h-[500px]">
         <img
           src={src}
@@ -255,7 +253,7 @@ const ProductPage = () => {
           onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
             const target = e.currentTarget;
             target.src = fallbackImage;
-            target.onerror = null; // Prevent infinite error loop
+            target.onerror = null; // 
           }}
         />
       </div>
@@ -406,7 +404,7 @@ const ProductPage = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <div className="bg-gray-50 rounded-lg overflow-hidden">
             {/* Product tags */}
-            <div className="absolute z-10 left-4 top-24">
+            <div className="absolute z-10 left-4 ">
               {product?.isNew && (
                 <Badge className="bg-blue-500 mb-2 shadow-md">
                   <Tag size={12} className="mr-1" /> New Arrival
@@ -431,6 +429,7 @@ const ProductPage = () => {
                   <CarouselContent>
                     {mediaItems?.map((media, index) => (
                       <CarouselItem key={index}>
+                   
                         {media?.file_type === 'image'
                           ? renderProductImage(media?.file, media?.description || product?.name)
                           : null}
@@ -499,7 +498,7 @@ const ProductPage = () => {
               {hasDiscount ? (
                 <div className="flex items-center gap-2">
                   <span className="text-2xl font-bold text-red-600">
-                    NPR {discountedPrice}
+                    NPR {product?.finalprice}
                   </span>
                   <span className="text-lg text-gray-500 line-through">
                     NPR {product?.price}

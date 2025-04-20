@@ -140,7 +140,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           {hasDiscount ? (
             <div className="flex items-center">
               <p className="text-lg font-semibold text-gray-900">
-                {currencySymbol} {afterDiscountAmount}
+                {currencySymbol} {product.finalprice}
               </p>
               <p className="ml-2 text-sm text-gray-500 line-through">
                 {currencySymbol} {product?.price}

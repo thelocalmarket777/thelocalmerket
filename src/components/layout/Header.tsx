@@ -126,8 +126,8 @@ const Header = () => {
         <div className="flex items-center justify-between">
           {/* Logo */}
           <Link to="/" className="text-2xl font-bold text-teal-600">
-            StartUp
-            <sub className="text-lg text-gray-500">बजार</sub>
+           The Local
+            <sub className="text-lg text-gray-500">Market</sub>
           </Link>
 
           {/* Search Bar - Desktop */}

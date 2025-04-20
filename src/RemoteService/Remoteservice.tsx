@@ -129,7 +129,7 @@ const RemoteServices = {
   // Filters
   filterProductCategories: (data) => getRequest(`inventory/products/?category=${data}&stock=true`),
   filterProductStatus: (data) => getRequest(`inventory/products/?status=${data}`),
-  filterProductSearch: (data) => getRequest(`inventory/products/?name=${data}`),
+  filterProductSearch: (data) => getRequest(`inventory/products/?search=${data}`),
 
 
   getOderdetailsbyId: (id) => getRequest(`inventory/orders/${id}/`),

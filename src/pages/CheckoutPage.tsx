@@ -60,8 +60,7 @@ const CheckoutPage = () => {
 
   const token = localStorage.getItem('token');
   const user = JSON.parse(localStorage.getItem('user') || '{}');
-
-  // Form state
+  
   const [formData, setFormData] = useState<FormData>({
     address: user?.address || '',
     city: user?.city || '',
@@ -73,7 +72,20 @@ const CheckoutPage = () => {
   });
 
   const currencySymbol = 'NPR';
+  const getPromoDiscount = () => {
+    try {
+      const discountData = localStorage.getItem('appliedDiscount');
+      if (!discountData) return 0;
+      
+      const parsedDiscount = JSON.parse(discountData);
+      return parsedDiscount && typeof parsedDiscount.amount === 'number' ? parsedDiscount.amount : 0;
+    } catch (error) {
+      console.error('Error parsing promo discount:', error);
+      return 0;
+    }
+  };
 
+  const promoDiscount = getPromoDiscount();
   useEffect(() => {
     if (items.length === 0) {
       navigate('/cart');
@@ -143,7 +155,8 @@ const CheckoutPage = () => {
     method => method.id === formData.deliveryMethod
   );
 
-  const calculatedTotal = subtotal + (selectedDeliveryMethod?.price || 0);
+  // Calculate the final total (subtotal - promoDiscount + shipping)
+  const calculatedTotal = subtotal - promoDiscount + (selectedDeliveryMethod?.price || 0);
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -175,8 +188,10 @@ const CheckoutPage = () => {
     }
 
     setIsPlacingOrder(true);
-
-    // Format the order data with only required fields
+    const calculatedSubtotal = subtotal; // The original cart subtotal
+    const appliedDiscount = promoDiscount; // From our new function
+    const shippingCost = selectedDeliveryMethod?.price || 0;
+    const calculatedTotal = calculatedSubtotal - appliedDiscount + shippingCost;
     const orderData = {
       user_id: user.id,
       items: items.map(item => ({
@@ -190,11 +205,11 @@ const CheckoutPage = () => {
         ? 'Store Pickup' 
         : `${formData.address}, ${formData.city}, ${formData.zipCode}`,
       delivery_method: formData.deliveryMethod,
-      subtotal: subtotal,
+      subtotal: subtotal - promoDiscount, // Fixed: using promoDiscount instead of undefined variable
       shipping_cost: selectedDeliveryMethod?.price || 0,
       total_amount: calculatedTotal,
       payment_method: formData.paymentMethod,
-      receiverContact:formData.phone
+      receiverContact: formData.phone
     };
 
     // Place the order
@@ -203,8 +218,9 @@ const CheckoutPage = () => {
       const order = res.data;
       console.log('res', res);
       
-      // Clear the cart
+      // Clear the cart and applied discount
       clearCart();
+      localStorage.removeItem('appliedDiscount');
       localStorage.setItem('orderconform', JSON.stringify(order));
 
       // Show success notification
@@ -283,12 +299,9 @@ const CheckoutPage = () => {
                   ) : (
                     <>
                       <RadioGroup
-                  
                         value={formData.deliveryMethod}
                         onValueChange={handleDeliveryMethodChange}
                         className="space-y-4"
-                        // aria-invalid={!!formErrors.deliveryMethod}
-                        // aria-describedby={formErrors.deliveryMethod ? "deliveryMethod-error" : undefined}
                       >
                         {deliveryMethods.map((method) => (
                           <div
@@ -427,7 +440,7 @@ const CheckoutPage = () => {
                     </div>
 
                     <div className="md:col-span-2">
-                      <Label htmlFor="phone">Recevier Number</Label>
+                      <Label htmlFor="phone">Receiver Number</Label>
                       <Input
                         id="phone"
                         name="phone"
@@ -449,8 +462,8 @@ const CheckoutPage = () => {
                 </CardContent>
               </Card>
 
-    {/* Order Notes */}
-    <Card>
+              {/* Order Notes */}
+              <Card>
                 <CardHeader className="pb-3">
                   <CardTitle>Additional Information</CardTitle>
                 </CardHeader>
@@ -470,7 +483,6 @@ const CheckoutPage = () => {
                 </CardContent>
               </Card>
              
-
               {/* Payment Method */}
               <Card>
                 <CardHeader className="pb-3">
@@ -499,7 +511,8 @@ const CheckoutPage = () => {
                       </div>
                     </div>
                     
-                    {/* <div className="flex items-center justify-between border border-gray-200 rounded-lg p-4 hover:bg-gray-50 cursor-pointer">
+                    {/* Commented out payment methods - can be enabled when implemented
+                    <div className="flex items-center justify-between border border-gray-200 rounded-lg p-4 hover:bg-gray-50 cursor-pointer">
                       <div className="flex items-center gap-3">
                         <RadioGroupItem value="esewa" id="esewa" />
                         <div className="flex items-center">
@@ -553,8 +566,6 @@ const CheckoutPage = () => {
                   </RadioGroup>
                 </CardContent>
               </Card>
-
-          
             </div>
 
             {/* Order Summary */}
@@ -592,6 +603,15 @@ const CheckoutPage = () => {
                       <span className="text-gray-600">Subtotal</span>
                       <span className="font-medium">{currencySymbol} {subtotal.toFixed(2)}</span>
                     </div>
+                    
+                    {/* Show promo discount if available */}
+                    {promoDiscount > 0 && (
+                      <div className="flex justify-between items-center text-green-600">
+                        <span>Discount</span>
+                        <span>- {currencySymbol} {promoDiscount.toFixed(2)}</span>
+                      </div>
+                    )}
+                    
                     <div className="flex justify-between items-center">
                       <span className="text-gray-600">Shipping</span>
                       <span className="font-medium">

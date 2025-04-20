@@ -7,7 +7,7 @@ const Footer = () => {
       <div className="container mx-auto px-4">
         <div className="flex flex-col md:flex-row justify-between">
           <div className="mb-4 md:mb-0">
-            <h3 className="text-lg font-semibold mb-2">Startup <sub>बजार</sub></h3>
+            <h3 className="text-lg font-semibold mb-2">TheLocal <sub>Market</sub></h3>
             <p className="text-gray-600 text-sm">
               Your one-stop destination for quality products.
             </p>
