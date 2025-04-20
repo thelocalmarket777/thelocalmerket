@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import MainLayout from '@/components/layout/MainLayout';
 import { Button } from '@/components/ui/button';
@@ -6,8 +6,6 @@ import {
   Star,
   ShoppingCart,
   Heart,
-  Truck,
-  Package,
   ArrowLeft,
   ThumbsUp,
   User,
@@ -49,9 +47,11 @@ const ProductPage = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
 
+  // State management
   const [product, setProduct] = useState<Product | null>(null);
   const [mediaItems, setMediaItems] = useState<ProductMedia[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [reviewText, setReviewText] = useState('');
   const [reviewRating, setReviewRating] = useState(5);
@@ -60,8 +60,17 @@ const ProductPage = () => {
   const [selectedImage, setSelectedImage] = useState(0);
   const [activeTab, setActiveTab] = useState("all");
   
-  // Sample user ID for demonstration
-  const currentUserId = id; 
+  // Get current user from localStorage with error handling
+  const currentUser = useMemo(() => {
+    try {
+      return JSON.parse(localStorage.getItem('user') || '{}');
+    } catch (e) {
+      console.error('Error parsing user from localStorage:', e);
+      return {};
+    }
+  }, []);
+  
+  const currentUserId = currentUser?.id;
 
   // Check if discount is available
   const hasDiscount = product?.discount && product?.discount > 0;
@@ -76,10 +85,16 @@ const ProductPage = () => {
     
     const fetchData = async () => {
       if (!id) return;
+      
       setIsLoading(true);
+      setError(null);
+      
       try {
         const res = await RemoteServices.getById(id);
-        if (res.status === 200 && mounted) {
+        
+        if (!mounted) return;
+        
+        if (res.status === 200) {
           // Update product data
           setProduct(res.data.product);
           
@@ -98,13 +113,13 @@ const ProductPage = () => {
           setReviews(processedReviews);
         }
       } catch (error) {
-        if (mounted) {
-          console.error(error);
-          toast({
-            title: "Error",
-            description: "Failed to fetch product details",
-          });
-        }
+        if (!mounted) return;
+        console.error('Error fetching product:', error);
+        setError('Failed to load product details. Please try again later.');
+        toast({
+          title: "Error",
+          description: "Failed to fetch product details",
+        });
       } finally {
         if (mounted) {
           setIsLoading(false);
@@ -117,17 +132,18 @@ const ProductPage = () => {
     return () => {
       mounted = false;
     };
-  }, [id]);
+  }, [id, toast]);
 
   // Handle quantity change with bounds checking
-  const handleQuantityChange = (value: number) => {
+  const handleQuantityChange = useCallback((value: number) => {
     const maxQuantity = product?.stock ?? 1;
     if (value >= 1 && value <= maxQuantity) {
       setQuantity(value);
     }
-  };
+  }, [product?.stock]);
 
-  const handleAddToCart = () => {
+  // Add to cart handler
+  const handleAddToCart = useCallback(() => {
     if (product) {
       addItem(product, quantity);
       toast({
@@ -135,20 +151,29 @@ const ProductPage = () => {
         description: `${quantity} x ${product.name} added to your cart`,
       });
     }
-  };
+  }, [product, quantity, addItem, toast]);
 
-  const handleBuyNow = () => {
+  // Buy now handler
+  const handleBuyNow = useCallback(() => {
     if (product) {
       addItem(product, quantity);
       navigate('/checkout');
     }
-  };
+  }, [product, quantity, addItem, navigate]);
 
   // Like a review
-  const handleLikeReview = async (reviewId: string) => {
+  const handleLikeReview = useCallback(async (reviewId: string) => {
+    if (!currentUserId) {
+      toast({
+        title: "Authentication required",
+        description: "Please sign in to like reviews",
+      });
+      return;
+    }
+    
     try {
       // For demonstration: in a real app, this would be an API call
-      const updatedReviews = reviews.map(review => {
+      setReviews(prevReviews => prevReviews.map(review => {
         if (review.id === reviewId) {
           const isAlreadyLiked = review.likedBy?.includes(currentUserId);
           const updatedLikedBy = isAlreadyLiked 
@@ -166,7 +191,8 @@ const ProductPage = () => {
       
       setReviews(updatedReviews);
       
-  
+      // In a real app, you would make an API call like:
+      // await RemoteServices.likeReview(reviewId, currentUserId);
       
       toast({
         title: "Success",
@@ -179,21 +205,31 @@ const ProductPage = () => {
         description: "Failed to update review like",
       });
     }
-  };
+  }, [currentUserId, toast]);
 
   // Review submission using async/await and a submission state
-  const handleSubmitReview = async (e: React.FormEvent) => {
+  const handleSubmitReview = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
+    
     if (!reviewText.trim()) return;
+    
+    if (!currentUserId) {
+      toast({
+        title: "Authentication required",
+        description: "Please sign in to submit a review",
+      });
+      return;
+    }
 
     const reviewData = {
-      product: product?.id,
+      productId: product?.id,
       rating: reviewRating,
       comment: reviewText.trim(),
       user: currentUserId
     };
 
     setIsSubmittingReview(true);
+    
     try {
       const res = await RemoteServices.createReviewOnProduct(reviewData);
       if (res.status === 200) {
@@ -221,10 +257,10 @@ const ProductPage = () => {
     } finally {
       setIsSubmittingReview(false);
     }
-  };
+  }, [reviewText, reviewRating, product?.id, currentUserId, toast]);
 
-  // Filter reviews based on active tab
-  const filteredReviews = () => {
+  // Filter reviews based on active tab - memoized
+  const filteredReviews = useMemo(() => {
     switch(activeTab) {
       case "newest":
         return [...reviews].sort((a, b) => 
@@ -239,42 +275,36 @@ const ProductPage = () => {
       default:
         return reviews;
     }
-  };
+  }, [reviews, activeTab]);
 
   // Helper to render product image with fallback
-  const renderProductImage = (src?: string, alt?: string) => {
-     return(
-      <div className="relative w-full h-[500px]">
-        <img
-          src={src}
-          alt={alt?.trim() || "Product image"}
-          className="w-full h-full object-contain transition-opacity duration-300"
-          loading="lazy"
-          onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
-            const target = e.currentTarget;
-            target.src = fallbackImage;
-            target.onerror = null; // 
-          }}
-        />
-      </div>
-    );
-  };
+  const renderProductImage = (src?: string, alt?: string) => (
+    <img
+      src={src || fallbackImage}
+      alt={alt || "Product image"}
+      className="w-full h-[500px] object-contain"
+      onError={(e) => {
+        e.currentTarget.src = fallbackImage;
+      }}
+    />
+  );
 
   // Render rating stars
-  const renderRating = (rating: number, size = 18) => (
-    <div className="flex items-center">
+  const renderRating = useCallback((rating: number, size = 18) => (
+    <div className="flex items-center" aria-label={`${rating} out of 5 stars`}>
       {[...Array(5)].map((_, i) => (
         <Star
           key={i}
           size={size}
           className={i < rating ? "text-yellow-500 fill-yellow-500" : "text-gray-300"}
+          aria-hidden="true"
         />
       ))}
     </div>
-  );
+  ), []);
 
   // Render review submission form with submission state
-  const renderReviewForm = () => (
+  const renderReviewForm = useCallback(() => (
     <Card className="mb-8">
       <CardHeader>
         <h3 className="text-xl font-semibold">Write a Review</h3>
@@ -283,8 +313,8 @@ const ProductPage = () => {
         <form onSubmit={handleSubmitReview}>
           <div className="mb-4">
             <div className="flex items-center gap-2 mb-2">
-              <label className="text-sm font-medium">Your Rating:</label>
-              <div className="flex">
+              <label htmlFor="rating" className="text-sm font-medium">Your Rating:</label>
+              <div className="flex" id="rating">
                 {[1, 2, 3, 4, 5].map((star) => (
                   <button
                     key={star}
@@ -292,6 +322,8 @@ const ProductPage = () => {
                     onClick={() => setReviewRating(star)}
                     className="focus:outline-none"
                     disabled={isSubmittingReview}
+                    aria-label={`Rate ${star} stars`}
+                    aria-pressed={star === reviewRating}
                   >
                     <Star
                       size={20}
@@ -302,23 +334,29 @@ const ProductPage = () => {
               </div>
             </div>
             <Textarea
+              id="review-text"
               placeholder="Share your experience with this product..."
               value={reviewText}
               onChange={(e) => setReviewText(e.target.value)}
               className="w-full min-h-[120px]"
               disabled={isSubmittingReview}
+              aria-label="Review comment"
             />
           </div>
-          <Button type="submit" disabled={!reviewText.trim() || isSubmittingReview}>
+          <Button 
+            type="submit" 
+            disabled={!reviewText.trim() || isSubmittingReview}
+            aria-busy={isSubmittingReview}
+          >
             {isSubmittingReview ? "Submitting..." : "Submit Review"}
           </Button>
         </form>
       </CardContent>
     </Card>
-  );
+  ), [handleSubmitReview, isSubmittingReview, reviewRating, reviewText]);
 
   // Render list of reviews with filter tabs
-  const renderReviews = () => (
+  const renderReviews = useCallback(() => (
     <>
       <Tabs defaultValue="all" className="mb-6" onValueChange={setActiveTab}>
         <TabsList className="mb-4">
@@ -333,19 +371,19 @@ const ProductPage = () => {
         </TabsList>
       </Tabs>
       
-      <ScrollArea className="h-[600px] rounded-md">
-        {filteredReviews().length > 0 ? (
-          filteredReviews().map((review) => (
+      <ScrollArea className="h-[500px] rounded-md">
+        {filteredReviews.length > 0 ? (
+          filteredReviews.map((review) => (
             <Card key={review.id} className="mb-4">
               <CardHeader>
                 <div className="flex justify-between items-start">
                   <div>
                     <div className="flex items-center gap-2">
-                      <User size={20} className="text-gray-400" />
+                      <User size={20} className="text-gray-400" aria-hidden="true" />
                       <span className="font-medium">{review.user}</span>
                       {review.date && (
                         <Badge variant="outline" className="ml-2 text-xs">
-                          <Clock size={12} className="mr-1" />
+                          <Clock size={12} className="mr-1" aria-hidden="true" />
                           {review.date}
                         </Badge>
                       )}
@@ -366,8 +404,10 @@ const ProductPage = () => {
                     size="sm" 
                     className={`gap-1 ${review.likedBy?.includes(currentUserId) ? 'text-blue-600' : ''}`}
                     onClick={() => handleLikeReview(review.id)}
+                    aria-label={`Mark review as helpful (${review.likes || 0} likes)`}
+                    aria-pressed={review.likedBy?.includes(currentUserId)}
                   >
-                    <ThumbsUp size={16} />
+                    <ThumbsUp size={16} aria-hidden="true" />
                     Helpful ({review.likes || 0})
                   </Button>
                 </div>
@@ -381,38 +421,51 @@ const ProductPage = () => {
         )}
       </ScrollArea>
     </>
-  );
+  ), [filteredReviews, currentUserId, handleLikeReview, renderRating]);
 
+  // Loading state
   if (isLoading) {
     return <Loadingdiv />;
   }
 
+  // Error state
+  if (error) {
+    return <Nothing title={'Error Loading Product'} content={error} />;
+  }
+
+  // Product not found state
   if (!product) {
-    return <Nothing title={'Product Not Found'} content={'The product you are looking for doesn`t exist or has been removed.'} />;
+    return <Nothing title={'Product Not Found'} content={'The product you are looking for doesn\'t exist or has been removed.'} />;
   }
 
   return (
     <MainLayout>
       <div className="container mx-auto px-4 py-8">
+        {/* Breadcrumb navigation */}
         <div className="mb-6">
-          <Link to="/" className="text-sm text-gray-500 hover:text-brand-blue flex items-center">
-            <ArrowLeft size={16} className="mr-1" />
+          <Link 
+            to="/" 
+            className="text-sm text-gray-500 hover:text-brand-blue flex items-center"
+            aria-label="Back to shop"
+          >
+            <ArrowLeft size={16} className="mr-1" aria-hidden="true" />
             Back to shop
           </Link>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          {/* Product images section */}
           <div className="bg-gray-50 rounded-lg overflow-hidden">
             {/* Product tags */}
-            <div className="absolute z-10 left-4 ">
+            <div className="absolute z-10 left-4 top-24">
               {product?.isNew && (
                 <Badge className="bg-blue-500 mb-2 shadow-md">
-                  <Tag size={12} className="mr-1" /> New Arrival
+                  <Tag size={12} className="mr-1" aria-hidden="true" /> New Arrival
                 </Badge>
               )}
               {hasDiscount && (
                 <Badge className="bg-red-500 shadow-md">
-                  <Tag size={12} className="mr-1" /> {product?.discount}% OFF
+                  <Tag size={12} className="mr-1" aria-hidden="true" /> {product?.discount}% OFF
                 </Badge>
               )}
             </div>
@@ -443,19 +496,21 @@ const ProductPage = () => {
                 {/* Thumbnail navigation */}
                 <div className="flex justify-center gap-2 mt-4 px-4 overflow-x-auto">
                   {mediaItems?.map((media, index) => (
-                    <div 
+                    <button 
                       key={index} 
                       className={`h-16 w-16 rounded cursor-pointer border-2 overflow-hidden ${
                         selectedImage === index ? 'border-blue-500' : 'border-transparent'
                       }`}
                       onClick={() => setSelectedImage(index)}
+                      aria-label={`View image ${index + 1}`}
+                      aria-current={selectedImage === index}
                     >
                       <img 
                         src={media?.file} 
                         alt={`Thumbnail ${index + 1}`} 
                         className="h-full w-full object-cover"
                       />
-                    </div>
+                    </button>
                   ))}
                 </div>
               </div>
@@ -464,8 +519,11 @@ const ProductPage = () => {
             )}
           </div>
 
+          {/* Product details section */}
           <div>
             <h1 className="text-3xl font-bold text-gray-900 mb-2">{product?.name}</h1>
+            
+            {/* Product metadata badges */}
             <div className="flex flex-wrap items-center gap-2 mb-3">
               {product?.author !=='' && (
                 <Badge variant="outline" className="text-sm">Author: {product?.author}</Badge>
@@ -473,7 +531,7 @@ const ProductPage = () => {
               {product?.genre  && (
                 <Badge variant="outline" className="text-sm">Genre: {product?.genre}</Badge>
               )}
-              {product?.totalpage >0  && (
+              {product?.totalpage && (
                 <Badge variant="outline" className="text-sm">Page: {product?.totalpage}</Badge>
               )}
               {product?.language && (
@@ -486,6 +544,8 @@ const ProductPage = () => {
                 <Badge variant="outline" className="text-sm">Health: {product?.ageproduct}</Badge>
               )}
             </div>
+            
+            {/* Rating summary */}
             <div className="mb-4 flex items-center">
               {renderRating(Number(product?.rating) || 0)}
               <span className="ml-2 text-sm text-gray-500">
@@ -512,42 +572,52 @@ const ProductPage = () => {
               )}
             </div>
 
+            {/* Product description */}
             <div className="mb-6">
               <p className="text-gray-700 leading-relaxed">{product?.description}</p>
             </div>
+            
+            {/* Stock status */}
             <div className="mb-6">
               <span
-                className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${product?.stock > 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                  }`}
+                className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                  product?.stock > 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                }`}
               >
                 {product?.stock > 0
                   ? `In Stock (${product?.stock} available)`
                   : 'Out of Stock'}
               </span>
             </div>
+            
+            {/* Quantity selector */}
             <div className="mb-6">
               <div className="flex items-center gap-3 mb-2">
-                <label className="text-sm font-medium">Quantity</label>
+                <label htmlFor="quantity" className="text-sm font-medium">Quantity</label>
                 <div className="flex items-center">
                   <button
                     onClick={() => handleQuantityChange(quantity - 1)}
                     disabled={quantity <= 1}
                     className="px-3 py-2 border border-gray-300 rounded-l-md bg-gray-50 text-gray-500 hover:bg-gray-100 disabled:opacity-50"
+                    aria-label="Decrease quantity"
                   >
                     -
                   </button>
                   <input
+                    id="quantity"
                     type="number"
                     min="1"
                     max={product?.stock}
                     value={quantity}
                     onChange={(e) => handleQuantityChange(parseInt(e.target.value, 10) || 1)}
                     className="w-16 px-3 py-2 border-t border-b border-gray-300 text-center text-gray-900"
+                    aria-label="Product quantity"
                   />
                   <button
                     onClick={() => handleQuantityChange(quantity + 1)}
-                    disabled={quantity >= product?.stock}
+                    disabled={quantity >= (product?.stock || 0)}
                     className="px-3 py-2 border border-gray-300 rounded-r-md bg-gray-50 text-gray-500 hover:bg-gray-100 disabled:opacity-50"
+                    aria-label="Increase quantity"
                   >
                     +
                   </button>
@@ -562,8 +632,9 @@ const ProductPage = () => {
                 disabled={product?.stock === 0}
                 className="flex-1 gap-2"
                 size="lg"
+                aria-label="Add to cart"
               >
-                <ShoppingCart size={20} />
+                <ShoppingCart size={20} aria-hidden="true" />
                 Add to Cart
               </Button>
               <Button
@@ -571,18 +642,42 @@ const ProductPage = () => {
                 disabled={product?.stock === 0}
                 className="flex-1 gap-2 bg-green-600 hover:bg-green-700"
                 size="lg"
+                aria-label="Buy now"
               >
-                <ShoppingBag size={20} />
+                <ShoppingBag size={20} aria-hidden="true" />
                 Buy Now
               </Button>
-              <Button variant="outline" size="lg" className="gap-2">
-                <Heart size={20} />
+              <Button 
+                variant="outline" 
+                size="lg" 
+                className="gap-2"
+                aria-label="Add to wishlist"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  RemoteServices.createwishlist({product_id:product.id}).then((res) => {
+                    toast({
+                        title: 'Added to wish list Successfully',
+                        description: res.data.message,
+                    });
+        
+                }).catch(error => {
+                    toast({
+                        variant: 'destructive',
+                        title: ' Failed',
+                        description: 'An error occurred ',
+                    });
+                })
+                 
+                }}
+              >
+                <Heart size={20} aria-hidden="true" />
                 Wishlist
               </Button>
             </div>
             
-       
-           <Shippinginfo/>
+            {/* Shipping information section */}
+            <Shippinginfo />
           </div>
         </div>
 
