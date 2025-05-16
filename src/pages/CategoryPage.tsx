@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Product } from '@/types';
 import { ArrowLeft, Loader2 } from 'lucide-react';
 import RemoteServices from '@/RemoteService/Remoteservice';
+import { LoadingSkeleton } from '@/components/HelperUI/Loading';
 
 const PRODUCTS_PER_PAGE = 8;
 
@@ -106,15 +107,7 @@ const CategoryPage = () => {
         </div>
 
         {isLoading && products.length === 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {[...Array(4)].map((_, index) => (
-              <div key={index} className="rounded-lg border border-gray-200 bg-white p-4 h-80 animate-pulse">
-                <div className="h-48 bg-gray-200 rounded-md mb-4"></div>
-                <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-                <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-              </div>
-            ))}
-          </div>
+       <LoadingSkeleton count={4} />
         ) : products.length > 0 ? (
           <>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">

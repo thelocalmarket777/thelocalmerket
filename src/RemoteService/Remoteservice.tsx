@@ -2,8 +2,8 @@ import axios from 'axios';
 import { get } from 'http';
 
 const remote = {
-  // address: 'http://127.0.0.1:8000/api/', 
-  address: 'https://backendshop-production-e1ec.up.railway.app/api/', 
+  address: 'http://127.0.0.1:8000/api/', 
+  // address: 'https://backendshop-production-e1ec.up.railway.app/api/', 
   
 };
 
@@ -128,6 +128,7 @@ const RemoteServices = {
   
   // Filters
   filterProductCategories: (data) => getRequest(`inventory/products/?category=${data}&stock=true`),
+  newarivalProductCategories: () => getRequest(`inventory/products/?isNew=true&stock=true`),
   filterProductStatus: (data) => getRequest(`inventory/products/?status=${data}`),
   filterProductSearch: (data) => getRequest(`inventory/products/?search=${data}`),
 
@@ -143,6 +144,9 @@ const RemoteServices = {
 
   createwishlist :(data)=>postRequest("inventory/wishlist/add/", data),
   createcartlist :(data)=>postRequest("inventory/wishlist/add/", data),
+
+  getnotificationHistory: () => getRequest(`notifications/history/`),
+  getTopCatogires: () => getRequest(`inventory/top-by-category/`),
 };
 
 export default RemoteServices;

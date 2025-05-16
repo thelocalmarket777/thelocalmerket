@@ -209,7 +209,8 @@ const CheckoutPage = () => {
       shipping_cost: selectedDeliveryMethod?.price || 0,
       total_amount: calculatedTotal,
       payment_method: formData.paymentMethod,
-      receiverContact: formData.phone
+      receiverContact: formData.phone,
+      notes:formData.notes
     };
 
     // Place the order

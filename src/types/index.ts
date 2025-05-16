@@ -95,3 +95,24 @@ export interface FormData {
   notes: string;
   items?: Product;
 }
+
+export interface BusinnessConnectionRequest {
+  sellerType: 'manufacturer' | 'individual' | '';
+  companyName: string;
+  panNumber: string;
+  productName: string;
+  productDescription: string;
+  productCategory: string;
+  cost: string;
+  suggestedRetailPrice: string;
+  commissionRate: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  address: string;
+  city: string;
+  state: string;
+  zip: string;
+  termsAccepted: boolean;
+}
