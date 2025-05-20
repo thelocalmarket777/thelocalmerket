@@ -22,6 +22,8 @@ import NotificationPage from './pages/Notificationpage';
 import ProductSubmissionForm from './pages/RequestForProductSell';
 import CategoriesPage from './pages/CategoriesPage';
 import LocalProductShowcase from './pages/LocalProductShowcase';
+import BuyNowCheckoutPage from '@/pages/BuyNowCheckoutPage';
+import { useFcmToken } from './hooks/useFcmToken';
 
 const queryClient = new QueryClient();
 
@@ -45,6 +47,7 @@ const App = () => {
                 <Route path="/cart" element={<CartPage />} />
                 <Route path="/wishlist" element={<Wishlist />} />
                 <Route path="/checkout" element={<CheckoutPage />} />
+                <Route path="/checkout/buy-now" element={<BuyNowCheckoutPage />} />
                 <Route path="/order-confirmation/" element={<OrderConfirmationPage />} />
                 <Route path="/orderConfirmation/:id" element={<OrderPurchase  />} />
                 <Route path="/profile" element={<ProfilePage />} />

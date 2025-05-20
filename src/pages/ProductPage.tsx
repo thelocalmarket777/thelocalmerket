@@ -43,11 +43,11 @@ const fallbackImage =
 
 const ProductPage = () => {
   const { id } = useParams<{ id: string }>();
-  const { addItem } = useCart();
+  const { addItem, buynowCartfunc } = useCart();
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  // State management
+ 
   const [product, setProduct] = useState<Product | null>(null);
   const [mediaItems, setMediaItems] = useState<ProductMedia[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -59,49 +59,45 @@ const ProductPage = () => {
   const [isSubmittingReview, setIsSubmittingReview] = useState(false);
   const [selectedImage, setSelectedImage] = useState(0);
   const [activeTab, setActiveTab] = useState("all");
-  
-  // Get current user from localStorage with error handling
+  const [isWishlistProcessing, setIsWishlistProcessing] = useState(false);
+
+
   const currentUser = useMemo(() => {
     try {
       return JSON.parse(localStorage.getItem('user') || '{}');
     } catch (e) {
-      console.error('Error parsing user from localStorage:', e);
       return {};
     }
   }, []);
-  
+
   const currentUserId = currentUser?.id;
 
-  // Check if discount is available
+
   const hasDiscount = product?.discount && product?.discount > 0;
-
-
-  // Fetch product and reviews by ID
-
 
 
   useEffect(() => {
     let mounted = true;
-    
+
     const fetchData = async () => {
       if (!id) return;
-      
+
       setIsLoading(true);
       setError(null);
-      
+
       try {
         const res = await RemoteServices.getById(id);
-        
+
         if (!mounted) return;
-        
+
         if (res.status === 200) {
-          // Update product data
+     
           setProduct(res.data.product);
-          
-          // Set media items if they exist
+
+     
           setMediaItems(res.data.product.media || []);
-          
-          // Process reviews with consistent data structure
+
+      
           const processedReviews = res.data.product.reviews.map(review => ({
             ...review,
             date: new Date(review.created_at).toLocaleDateString(),
@@ -109,7 +105,7 @@ const ProductPage = () => {
             likedBy: review.likedBy || [],
             user: review.user || 'Anonymous'
           }));
-          
+
           setReviews(processedReviews);
         }
       } catch (error) {
@@ -134,7 +130,7 @@ const ProductPage = () => {
     };
   }, [id, toast]);
 
-  // Handle quantity change with bounds checking
+ 
   const handleQuantityChange = useCallback((value: number) => {
     const maxQuantity = product?.stock ?? 1;
     if (value >= 1 && value <= maxQuantity) {
@@ -142,7 +138,6 @@ const ProductPage = () => {
     }
   }, [product?.stock]);
 
-  // Add to cart handler
   const handleAddToCart = useCallback(() => {
     if (product) {
       addItem(product, quantity);
@@ -153,15 +148,13 @@ const ProductPage = () => {
     }
   }, [product, quantity, addItem, toast]);
 
-  // Buy now handler
   const handleBuyNow = useCallback(() => {
     if (product) {
-      addItem(product, quantity);
-      navigate('/checkout');
+      buynowCartfunc(product, 1);
+      navigate('/checkout/buy-now');
     }
-  }, [product, quantity, addItem, navigate]);
+  }, [product, navigate, buynowCartfunc]);
 
-  // Like a review
   const handleLikeReview = useCallback(async (reviewId: string) => {
     if (!currentUserId) {
       toast({
@@ -170,28 +163,32 @@ const ProductPage = () => {
       });
       return;
     }
-    
+
     try {
-      setReviews(prevReviews => prevReviews.map(review => {
-        if (review.id === reviewId) {
-          const isAlreadyLiked = review.likedBy?.includes(currentUserId);
-          const updatedLikedBy = isAlreadyLiked 
-            ? review.likedBy.filter(id => id !== currentUserId)
-            : [...(review.likedBy || []), currentUserId];
-          
-          return {
-            ...review,
-            likes: isAlreadyLiked ? review.likes - 1 : review.likes + 1,
-            likedBy: updatedLikedBy
-          };
-        }
-        return review;
-      }));
-      
-      toast({
-        title: "Success", 
-        description: "Review like updated"
-      });
+      const res = await RemoteServices.like_on_product_review(reviewId);
+      if (res.status === 200) {
+
+        setReviews(prevReviews => prevReviews.map(review => {
+          if (review.id === reviewId) {
+            const isAlreadyLiked = review.likedBy?.includes(currentUserId);
+            const updatedLikedBy = isAlreadyLiked
+              ? review.likedBy.filter(id => id !== currentUserId)
+              : [...(review.likedBy || []), currentUserId];
+
+            return {
+              ...review,
+              likes: isAlreadyLiked ? review.likes - 1 : review.likes + 1,
+              likedBy: updatedLikedBy
+            };
+          }
+          return review;
+        }));
+
+        toast({
+          title: "Success",
+          description: "Review like updated"
+        });
+      }
     } catch (error) {
       console.error("Error liking review:", error);
       toast({
@@ -201,12 +198,11 @@ const ProductPage = () => {
     }
   }, [currentUserId, toast]);
 
-  // Review submission using async/await and a submission state
   const handleSubmitReview = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!reviewText.trim()) return;
-    
+
     if (!currentUserId) {
       toast({
         title: "Authentication required",
@@ -223,20 +219,21 @@ const ProductPage = () => {
     };
 
     setIsSubmittingReview(true);
-    
+
     try {
       const res = await RemoteServices.createReviewOnProduct(reviewData);
-      if (res.status === 200) {
+
+      if (res.status === 201) {
         const newReview = {
           ...res.data,
           date: new Date(res.data.created_at).toLocaleDateString(),
           likes: 0,
           likedBy: [],
         };
-        
+
         setReviews(prev => [newReview, ...prev]);
         setReviewText('');
-        setReviewRating(5);
+        setReviewRating(0);
         toast({
           title: "Success",
           description: "Review submitted successfully!",
@@ -253,11 +250,11 @@ const ProductPage = () => {
     }
   }, [reviewText, reviewRating, product?.id, currentUserId, toast]);
 
-  // Filter reviews based on active tab - memoized
+  
   const filteredReviews = useMemo(() => {
-    switch(activeTab) {
+    switch (activeTab) {
       case "newest":
-        return [...reviews].sort((a, b) => 
+        return [...reviews].sort((a, b) =>
           new Date(b.date).getTime() - new Date(a.date).getTime()
         );
       case "highest":
@@ -271,7 +268,7 @@ const ProductPage = () => {
     }
   }, [reviews, activeTab]);
 
-  // Helper to render product image with fallback
+
   const renderProductImage = (src?: string, alt?: string) => (
     <img
       src={src || fallbackImage}
@@ -283,7 +280,7 @@ const ProductPage = () => {
     />
   );
 
-  // Render rating stars
+
   const renderRating = useCallback((rating: number, size = 18) => (
     <div className="flex items-center" aria-label={`${rating} out of 5 stars`}>
       {[...Array(5)].map((_, i) => (
@@ -297,7 +294,7 @@ const ProductPage = () => {
     </div>
   ), []);
 
-  // Render review submission form with submission state
+
   const renderReviewForm = useCallback(() => (
     <Card className="mb-8">
       <CardHeader>
@@ -337,8 +334,8 @@ const ProductPage = () => {
               aria-label="Review comment"
             />
           </div>
-          <Button 
-            type="submit" 
+          <Button
+            type="submit"
             disabled={!reviewText.trim() || isSubmittingReview}
             aria-busy={isSubmittingReview}
           >
@@ -349,7 +346,7 @@ const ProductPage = () => {
     </Card>
   ), [handleSubmitReview, isSubmittingReview, reviewRating, reviewText]);
 
-  // Render list of reviews with filter tabs
+
   const renderReviews = useCallback(() => (
     <>
       <Tabs defaultValue="all" className="mb-6" onValueChange={setActiveTab}>
@@ -364,7 +361,7 @@ const ProductPage = () => {
           <TabsTrigger value="most-liked">Most Liked</TabsTrigger>
         </TabsList>
       </Tabs>
-      
+
       <ScrollArea className="h-[500px] rounded-md">
         {filteredReviews.length > 0 ? (
           filteredReviews.map((review) => (
@@ -393,9 +390,9 @@ const ProductPage = () => {
               </CardContent>
               <CardFooter>
                 <div className="flex items-center gap-2">
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
+                  <Button
+                    variant="ghost"
+                    size="sm"
                     className={`gap-1 ${review.likedBy?.includes(currentUserId) ? 'text-blue-600' : ''}`}
                     onClick={() => handleLikeReview(review.id)}
                     aria-label={`Mark review as helpful (${review.likes || 0} likes)`}
@@ -417,28 +414,70 @@ const ProductPage = () => {
     </>
   ), [filteredReviews, currentUserId, handleLikeReview, renderRating]);
 
-  // Loading state
+
   if (isLoading) {
     return <Loadingdiv />;
   }
 
-  // Error state
   if (error) {
     return <Nothing title={'Error Loading Product'} content={error} />;
   }
 
-  // Product not found state
   if (!product) {
     return <Nothing title={'Product Not Found'} content={'The product you are looking for doesn\'t exist or has been removed.'} />;
   }
 
+  const handleWishlistToggle = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (!currentUserId) {
+      toast({
+        title: "Authentication Required",
+        description: "Please login to manage wishlist",
+        variant: "destructive",
+      });
+      navigate('/login');
+      return;
+    }
+
+    if (!product || isWishlistProcessing) return;
+
+    setIsWishlistProcessing(true);
+    try {
+      if (!product.is_wishlisted) {
+        const response = await RemoteServices.createwishlist({ product_id: product.id });
+        setProduct(prev => prev ? { ...prev, is_wishlisted: true } : null);
+        toast({
+          title: 'Added to Wishlist',
+          description: response.data.message || 'Product added to wishlist',
+        });
+      } else {
+        const response = await RemoteServices.deletewishlistfile(product.id);
+        setProduct(prev => prev ? { ...prev, is_wishlisted: false } : null);
+        toast({
+          title: 'Removed from Wishlist',
+          description: response.data.message || 'Product removed from wishlist',
+        });
+      }
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Operation Failed',
+        description: 'Failed to update wishlist. Please try again.',
+      });
+    } finally {
+      setIsWishlistProcessing(false);
+    }
+  };
+
   return (
     <MainLayout>
       <div className="container mx-auto px-4 py-8">
-        {/* Breadcrumb navigation */}
+    
         <div className="mb-6">
-          <Link 
-            to="/" 
+          <Link
+            to="/"
             className="text-sm text-gray-500 hover:text-brand-blue flex items-center"
             aria-label="Back to shop"
           >
@@ -447,28 +486,15 @@ const ProductPage = () => {
           </Link>
         </div>
 
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {/* Product images section */}
+        
           <div className="bg-gray-50 rounded-lg overflow-hidden">
-            {/* Product tags */}
-            <div className="absolute z-10 left-4 top-24">
-              {product?.isNew && (
-                <Badge className="bg-blue-500 mb-2 shadow-md">
-                  <Tag size={12} className="mr-1" aria-hidden="true" /> New Arrival
-                </Badge>
-              )}
-              {hasDiscount && (
-                <Badge className="bg-red-500 shadow-md">
-                  <Tag size={12} className="mr-1" aria-hidden="true" /> {product?.discount}% OFF
-                </Badge>
-              )}
-            </div>
-            
-            {/* Product images carousel */}
+
             {mediaItems?.length > 0 ? (
               <div>
-                <Carousel 
-                  className="w-full" 
+                <Carousel
+                  className="w-full"
                   opts={{ loop: true, align: "start" }}
                   value={selectedImage}
                   onValueChange={setSelectedImage}
@@ -476,7 +502,7 @@ const ProductPage = () => {
                   <CarouselContent>
                     {mediaItems?.map((media, index) => (
                       <CarouselItem key={index}>
-                   
+
                         {media?.file_type === 'image'
                           ? renderProductImage(media?.file, media?.description || product?.name)
                           : null}
@@ -487,21 +513,19 @@ const ProductPage = () => {
                   <CarouselNext className="right-2 lg:right-5 bg-white/70 hover:bg-white" />
                 </Carousel>
 
-                {/* Thumbnail navigation */}
                 <div className="flex justify-center gap-2 mt-4 px-4 overflow-x-auto">
                   {mediaItems?.map((media, index) => (
-                    <button 
-                      key={index} 
-                      className={`h-16 w-16 rounded cursor-pointer border-2 overflow-hidden ${
-                        selectedImage === index ? 'border-blue-500' : 'border-transparent'
-                      }`}
+                    <button
+                      key={index}
+                      className={`h-16 w-16 rounded cursor-pointer border-2 overflow-hidden ${selectedImage === index ? 'border-blue-500' : 'border-transparent'
+                        }`}
                       onClick={() => setSelectedImage(index)}
                       aria-label={`View image ${index + 1}`}
                       aria-current={selectedImage === index}
                     >
-                      <img 
-                        src={media?.file} 
-                        alt={`Thumbnail ${index + 1}`} 
+                      <img
+                        src={media?.file}
+                        alt={`Thumbnail ${index + 1}`}
                         className="h-full w-full object-cover"
                       />
                     </button>
@@ -513,16 +537,15 @@ const ProductPage = () => {
             )}
           </div>
 
-          {/* Product details section */}
+
           <div>
             <h1 className="text-3xl font-bold text-gray-900 mb-2">{product?.name}</h1>
-            
-            {/* Product metadata badges */}
+
             <div className="flex flex-wrap items-center gap-2 mb-3">
-              {product?.author !=='' && (
+              {product?.author !== '' && (
                 <Badge variant="outline" className="text-sm">Author: {product?.author}</Badge>
               )}
-              {product?.genre  && (
+              {product?.genre && (
                 <Badge variant="outline" className="text-sm">Genre: {product?.genre}</Badge>
               )}
               {product?.totalpage && (
@@ -531,23 +554,22 @@ const ProductPage = () => {
               {product?.language && (
                 <Badge variant="outline" className="text-sm">Language: {product?.language}</Badge>
               )}
-              {product?.madeinwhere  && (
+              {product?.madeinwhere && (
                 <Badge variant="outline" className="text-sm">MFG: {product?.madeinwhere}</Badge>
               )}
               {product?.ageproduct && (
                 <Badge variant="outline" className="text-sm">Health: {product?.ageproduct}</Badge>
               )}
             </div>
-            
-            {/* Rating summary */}
+
+
             <div className="mb-4 flex items-center">
               {renderRating(Number(product?.rating) || 0)}
               <span className="ml-2 text-sm text-gray-500">
                 {reviews?.length} {reviews?.length === 1 ? 'review' : 'reviews'}
               </span>
             </div>
-            
-            {/* Price display with discount */}
+
             <div className="mb-6">
               {hasDiscount ? (
                 <div className="flex items-center gap-2">
@@ -566,25 +588,23 @@ const ProductPage = () => {
               )}
             </div>
 
-            {/* Product description */}
+    
             <div className="mb-6">
               <p className="text-gray-700 leading-relaxed">{product?.description}</p>
             </div>
-            
-            {/* Stock status */}
+
+ 
             <div className="mb-6">
               <span
-                className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                  product?.stock > 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                }`}
+                className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${product?.stock > 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                  }`}
               >
                 {product?.stock > 0
                   ? `In Stock (${product?.stock} available)`
                   : 'Out of Stock'}
               </span>
             </div>
-            
-            {/* Quantity selector */}
+
             <div className="mb-6">
               <div className="flex items-center gap-3 mb-2">
                 <label htmlFor="quantity" className="text-sm font-medium">Quantity</label>
@@ -618,8 +638,7 @@ const ProductPage = () => {
                 </div>
               </div>
             </div>
-            
-            {/* Action buttons */}
+
             <div className="flex flex-wrap gap-4 mb-8">
               <Button
                 onClick={handleAddToCart}
@@ -641,41 +660,31 @@ const ProductPage = () => {
                 <ShoppingBag size={20} aria-hidden="true" />
                 Buy Now
               </Button>
-              <Button 
-                variant="outline" 
-                size="lg" 
-                className="gap-2"
-                aria-label="Add to wishlist"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  RemoteServices.createwishlist({product_id:product.id}).then((res) => {
-                    toast({
-                        title: 'Added to wish list Successfully',
-                        description: res.data.message,
-                    });
-        
-                }).catch(error => {
-                    toast({
-                        variant: 'destructive',
-                        title: ' Failed',
-                        description: 'An error occurred ',
-                    });
-                })
-                 
-                }}
+              <Button
+                variant="outline"
+                size="lg"
+                className={`flex-1 gap-2 ${
+                  isWishlistProcessing
+                    ? 'opacity-50 cursor-not-allowed'
+                    : product?.is_wishlisted
+                      ? 'text-red-600 hover:text-red-700'
+                      : ''
+                }`}
+                disabled={isWishlistProcessing}
+                onClick={handleWishlistToggle}
+                aria-label={product?.is_wishlisted ? "Remove from wishlist" : "Add to wishlist"}
               >
-                <Heart size={20} aria-hidden="true" />
-                Wishlist
+                <Heart
+                  size={20}
+                  className={product?.is_wishlisted ? "fill-current" : ""}
+                  aria-hidden="true"
+                />
+                {isWishlistProcessing ? 'Processing...' : 'Wishlist'}
               </Button>
             </div>
-            
-            {/* Shipping information section */}
             <Shippinginfo />
           </div>
         </div>
-
-        {/* Reviews section */}
         <div className="mt-16">
           <h2 className="text-2xl font-bold mb-8">Customer Reviews</h2>
           {renderReviewForm()}

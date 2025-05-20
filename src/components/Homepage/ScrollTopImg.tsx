@@ -1,28 +1,23 @@
 import { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 // Hero Section with Auto-Scrolling Image Carousel
-export default function HeroSection({ getTotalProductCount }) {
-  // Sample images for the carousel - replace with your actual images
-  const images = [
-    "/api/placeholder/1200/800", // First placeholder image
-    "/api/placeholder/1200/800", // Second placeholder image
-    "/api/placeholder/1200/800", // Third placeholder image
-    "/api/placeholder/1200/800", // Fourth placeholder image
-  ];
-  
+export default function HeroSection({ getTotalProductCount, productimgs }) {
+  const mainImages = productimgs?.filter(img => img.image_url !== null) || [];
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const intervalRef = useRef(null);
-  
- 
-  
+   
+  const navigate = useNavigate();
   // Auto-scroll effect
   useEffect(() => {
+    if (mainImages.length === 0) return;
+    
     // Setup interval for automatic scrolling
     intervalRef.current = setInterval(() => {
       setIsTransitioning(true);
       setTimeout(() => {
-        setCurrentImageIndex((prevIndex) => (prevIndex + 1) % images.length);
+        setCurrentImageIndex((prevIndex) => (prevIndex + 1) % mainImages.length);
         setIsTransitioning(false);
       }, 500); // Transition time before changing image
     }, 5000); // Change image every 5 seconds
@@ -33,16 +28,20 @@ export default function HeroSection({ getTotalProductCount }) {
         clearInterval(intervalRef.current);
       }
     };
-  }, [images.length]);
+  }, [mainImages.length]);
+  
+  if (mainImages.length === 0) {
+    return null; // or return a placeholder/loading state
+  }
   
   return (
-    <section className="relative overflow-hidden bg-black h-screen">
+    <section className="relative overflow-hidden bg-black h-[600px]">
       {/* Background image with transition effect */}
       <div className="absolute inset-0 z-0 opacity-60">
         <div className="absolute inset-0 z-10"></div>
         <img 
-          src={images[currentImageIndex]}
-          alt="Modern lifestyle" 
+          src={mainImages[currentImageIndex].image_url}
+          alt={`Slide ${currentImageIndex + 1}`}
           className={`object-cover w-full h-full transition-opacity duration-500 ease-in-out ${isTransitioning ? 'opacity-0' : 'opacity-100'}`}
         />
       </div>
@@ -60,23 +59,25 @@ export default function HeroSection({ getTotalProductCount }) {
             </span>
           </h1>
           <div className="flex flex-wrap gap-4 mt-6">
-            <button className="bg-white text-black hover:bg-white/90 hover:text-black px-8 py-3 rounded-md font-medium text-lg">
+            <button
+            onClick={() => navigate('/all') }
+             className="bg-white text-black hover:bg-white/90 hover:text-black px-8 py-3 rounded-md font-medium text-lg">
               Explore Collection
             </button>
-            {getTotalProductCount() > 0 && (
+            {/* {getTotalProductCount() > 0 && (
               <div className="px-4 py-2 bg-white/20 backdrop-blur-sm rounded-md text-white">
                 <span className="font-bold">{getTotalProductCount()}</span> products available
               </div>
-            )}
+            )} */}
           </div>
         </div>
       </div>
       
       {/* Image carousel indicators */}
       <div className="absolute bottom-8 left-0 right-0 z-20 flex justify-center gap-2">
-        {images.map((_, index) => (
+        {mainImages.map((img, index) => (
           <button
-            key={index}
+            key={img.id}
             onClick={() => {
               setIsTransitioning(true);
               setTimeout(() => {
@@ -90,7 +91,7 @@ export default function HeroSection({ getTotalProductCount }) {
                 intervalRef.current = setInterval(() => {
                   setIsTransitioning(true);
                   setTimeout(() => {
-                    setCurrentImageIndex((prevIndex) => (prevIndex + 1) % images.length);
+                    setCurrentImageIndex((prevIndex) => (prevIndex + 1) % mainImages.length);
                     setIsTransitioning(false);
                   }, 500);
                 }, 5000);

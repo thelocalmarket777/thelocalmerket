@@ -2,15 +2,19 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import MainLayout from '@/components/layout/MainLayout';
 import { Button } from '@/components/ui/button';
-import { Order } from '@/types';
+import { OrderDetails, OrderState, OrderItem } from '@/types';
 import { Package, User as UserIcon, ExternalLink, ImageIcon, AlertCircle, ChevronDown, ChevronUp, Gift } from 'lucide-react';
 import RemoteServices from '@/RemoteService/Remoteservice';
 
 const OrdersPage = () => {
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [expandedOrders, setExpandedOrders] = useState<Record<string, boolean>>({});
+  const [state, setState] = useState<OrderState>({
+    orders: [],
+    isLoading: true,
+    error: null,
+    expandedOrders: {}
+  });
+
+  const { orders, isLoading, error, expandedOrders } = state;
   
   const token = localStorage.getItem('token') !== null;
   const user = token ? JSON.parse(localStorage.getItem('user') || '{}') : null;
@@ -18,25 +22,31 @@ const OrdersPage = () => {
   const fetchOrders = useCallback(async () => {
     if (!user?.id) return;
     
-    setIsLoading(true);
-    setError(null);
+    setState(prev => ({ ...prev, isLoading: true, error: null }));
     
     try {
       const response = await RemoteServices.orderPlacedAllDetails();
       const ordersData = response.data || [];
-      setOrders(ordersData);
       
-      // Initialize expanded state for all orders (first one expanded by default)
-      const initialExpandedState = ordersData.reduce((acc, order, index) => {
-        acc[order.id] = index === 0; // First order expanded by default
-        return acc;
-      }, {});
-      setExpandedOrders(initialExpandedState);
+      // Initialize expanded state for all orders
+      const initialExpandedState = ordersData.reduce((acc, order, index) => ({
+        ...acc,
+        [order.id]: index === 0
+      }), {});
+
+      setState({
+        orders: ordersData,
+        isLoading: false,
+        error: null,
+        expandedOrders: initialExpandedState
+      });
     } catch (err) {
       console.error('Error fetching orders:', err);
-      setError('Failed to load your orders. Please try again later.');
-    } finally {
-      setIsLoading(false);
+      setState(prev => ({
+        ...prev,
+        isLoading: false,
+        error: 'Failed to load your orders. Please try again later.'
+      }));
     }
   }, [user?.id]);
 
@@ -44,14 +54,17 @@ const OrdersPage = () => {
     if (user?.id) {
       fetchOrders();
     } else {
-      setIsLoading(false);
+      setState(prev => ({ ...prev, isLoading: false }));
     }
   }, [user?.id, fetchOrders]);
 
-  const toggleOrderExpansion = (orderId) => {
-    setExpandedOrders(prev => ({
+  const toggleOrderExpansion = (orderId: string) => {
+    setState(prev => ({
       ...prev,
-      [orderId]: !prev[orderId]
+      expandedOrders: {
+        ...prev.expandedOrders,
+        [orderId]: !prev.expandedOrders[orderId]
+      }
     }));
   };
 
@@ -109,7 +122,7 @@ const OrdersPage = () => {
     }
     return item?.product?.imageUrl || '';
   };
-
+const currencysymbol = 'Rs.';
   return (
     <MainLayout>
       <div className="container mx-auto px-4 py-8">
@@ -235,7 +248,7 @@ const OrdersPage = () => {
                               {order?.order_items?.map((item, index) => (
                                 <div key={index} className="flex items-center">
                                   <div className="w-16 h-16 bg-gray-100 rounded flex items-center justify-center overflow-hidden">
-                               <Gift />
+                               <img src={item?.product_img} alt={item?.product_name} className="w-full h-full object-cover rounded" />
                                   </div>
                                   <div className="ml-4 flex-1">
                                   <div className="font-medium">
@@ -250,10 +263,10 @@ const OrdersPage = () => {
                                   </div>
                                   <div className="text-right">
                                   <p className="font-medium">
-                                    NPR {((parseFloat(item?.price) || 0) * (item?.quantity || 0)).toFixed(2)}
+                                    {currencysymbol} {((parseFloat(item?.price) || 0) * (item?.quantity || 0)).toFixed(2)}
                                   </p>
                                   <p className="text-sm text-gray-500">
-                                    NPR {parseFloat(item?.price || 0).toFixed(2)} each
+                                    {currencysymbol} {parseFloat(item?.price || 0).toFixed(2)} each
                                   </p>
                                   </div>
                                 </div>
@@ -262,20 +275,32 @@ const OrdersPage = () => {
                           </div>
 
                           {/* Order Summary */}
-                          <div className="mt-4 bg-gray-50 rounded-lg p-4">
-                            <div className="flex justify-between items-center mb-2">
-                              <span className="text-gray-600">Subtotal</span>
-                              <span>NPR {parseFloat(order?.subtotal || 0).toFixed(2)}</span>
+                            <div className="mt-4 bg-gray-50 rounded-lg p-4">
+                       
+                                 <div className="flex justify-between items-center pt-2 border-t border-gray-200 font-semibold">
+                                  <span className="text-gray-600">Subtotal</span>
+                              <div className="flex items-center gap-1">
+                              <span>{currencysymbol} {parseFloat(order?.subtotal || 0).toFixed(2)}</span>
+                              {/* <div className="relative group">
+                                <Gift size={16} className="text-red-900 cursor-help" />
+                                <div className="absolute bottom-full right-0 mb-2 hidden group-hover:block bg-black text-white text-xs py-1 px-2 rounded">
+                                Including discount 4%
+                                </div>
+                              </div> */}
+                              </div>
                             </div>
                             <div className="flex justify-between items-center mb-2">
                               <span className="text-gray-600">Shipping</span>
-                              <span>NPR {parseFloat(order?.shipping_cost || 0).toFixed(2)}</span>
+                              <span>{currencysymbol} {parseFloat(order?.shipping_cost || 0).toFixed(2)}</span>
                             </div>
                             <div className="flex justify-between items-center pt-2 border-t border-gray-200 font-semibold">
                               <span>Total</span>
-                              <span>NPR {parseFloat(order?.total_amount || 0).toFixed(2)}</span>
+                              <div className="flex items-center gap-1">
+                              <span>{currencysymbol} {parseFloat(order?.total_amount || 0).toFixed(2)}</span>
+                          
+                              </div>
                             </div>
-                          </div>
+                            </div>
 
                           {order.notes && (
                             <div className="mt-4 bg-blue-50 rounded-lg p-4 text-sm">

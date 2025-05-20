@@ -35,6 +35,9 @@ export interface Product {
   isNew?: boolean;
   media?: ProductMedia[];
   reviews: Review[];
+  image?: string;
+  is_wishlisted?: boolean;
+  
 }
 
 
@@ -54,6 +57,16 @@ export interface CartItem {
   quantity: number;
   category: string;
   name: string;
+  image?: string;
+  price: number;
+  finalprice?: number;
+  discount?: number;
+  author?: string;
+  genre?: string;
+  totalpage?: number;
+  language?: string;
+  madeinwhere?: string;
+
 }
 
 export interface Order {
@@ -70,10 +83,27 @@ export interface Order {
 
 export interface OrderItem {
   id: string;
-  order_id: string;
-  product: Product;
+  product_name: string;
+  product_image: string;
+  category: string;
   quantity: number;
   price: number;
+}
+
+export interface OrderDetails {
+  id: string;
+  user_id: string;
+  order_items: OrderItem[];
+  total_amount: number;
+  subtotal: number;
+  shipping_cost: number;
+  status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
+  delivery_method: string;
+  payment_method: string;
+  shipping_address: string;
+  notes?: string;
+  created_at: string;
+  product_img?: string;
 }
 
 export interface DeliveryMethod {
@@ -116,3 +146,18 @@ export interface BusinnessConnectionRequest {
   zip: string;
   termsAccepted: boolean;
 }
+
+export interface OrderState {
+  orders: OrderDetails[];
+  isLoading: boolean;
+  error: string | null;
+  expandedOrders: Record<string, boolean>;
+}
+
+export interface DirectCheckoutState {
+  product: Product;
+  quantity: number;
+  isDirect: boolean;
+}
+
+

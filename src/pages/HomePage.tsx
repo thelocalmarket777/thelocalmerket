@@ -18,21 +18,93 @@ import {
   Home,
   ShoppingBag
 } from 'lucide-react';
-import { 
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-} from '@/components/ui/carousel';
+
 import bookimgfront from '../assects/image/bookshowroom.jpg';
 import RemoteServices from '@/RemoteService/Remoteservice';
 import NotificationListener from '@/components/layout/Notification';
 import { LoadingSkeleton } from '@/components/HelperUI/Loading';
 import HeroSection from '@/components/Homepage/ScrollTopImg';
+import { set } from 'date-fns';
+import ImgScrollonly from '@/components/Homepage/ImgScrollonly';
+
+// Define interfaces for better type safety
+interface ValueProp {
+  icon: React.ElementType;
+  title: string;
+  description: string;
+  color: string;
+}
+
+interface Category {
+  name: string;
+  description: string;
+  icon: React.ElementType;
+  color: string;
+  textColor: string;
+  path: string;
+}
+
+interface FeaturedCollection {
+  title: string;
+  description: string;
+  image: string;
+  color: string;
+  path: string;
+}
+
+interface Testimonial {
+  name: string;
+  role: string;
+  content: string;
+  avatar: string;
+}
+
+interface LocalProduct {
+  title: string;
+  description: string;
+  buttonText: string;
+  path: string;
+}
+
+interface Product {
+  id: string;
+  name: string;
+  price: number;
+  image: string;
+  category: string;
+  [key: string]: any; // for additional properties
+}
+
+interface HomepageImage {
+  id: string;
+  type: 'main' | 'promotion' | 'product';
+  image_url: string | null;
+  created_at: string;
+}
+
+interface HomepageImages {
+  mainImg: HomepageImage[];
+  promotionImg: HomepageImage[];
+  productImg: HomepageImage[];
+}
+
+interface SectionHeaderProps {
+  title: string;
+  subtitle?: string;
+  linkText?: string;
+  linkPath?: string;
+}
+
+interface EmptyStateProps {
+  message: string;
+}
+
+interface TopCategories {
+  [key: string]: Product[];
+}
 
 // Define static data for better organization
-const valueProps = [
+const valueProps: ValueProp[] = [
   {
     icon: Package,
     title: "Premium Quality",
@@ -59,7 +131,7 @@ const valueProps = [
   }
 ];
 
-const categories = [
+const categories: Category[] = [
   { 
     name: 'Books', 
     description: 'Explore our collection of books',
@@ -94,7 +166,7 @@ const categories = [
   },
 ];
 
-const featuredCollections = [
+const featuredCollections: FeaturedCollection[] = [
   {
     title: "Wood Craft",
     description: "Handcrafted wooden items for your home",
@@ -111,7 +183,7 @@ const featuredCollections = [
   }
 ];
 
-const testimonials = [
+const testimonials: Testimonial[] = [
   {
     name: "Sarah J.",
     role: "Regular Customer",
@@ -132,7 +204,7 @@ const testimonials = [
   }
 ];
 
-const localNepalProducts = [
+const localNepalProducts: LocalProduct[] = [
   {
     title: "Nepali Heritage Books",
     description: "Explore the rich history and culture of Nepal through beautifully illustrated and thoughtfully written stories.",
@@ -169,50 +241,67 @@ const categoryIconMap = {
   home_decor: Home
 };
 
-const HomePage = () => {
-  const [topCategories, setTopCategories] = useState({});
-  const [featuredProducts, setFeaturedProducts] = useState([]);
-  const [newArrivals, setNewArrivals] = useState([]);
-  const [bestSellers, setBestSellers] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [hasError, setHasError] = useState(false);
+interface HomepageState {
+  topCategories: TopCategories;
+  homepageImages: HomepageImages;
+  featuredProducts: Product[];
+  newArrivals: Product[];
+  bestSellers: Product[];
+  isLoading: boolean;
+  hasError: boolean;
+}
 
-  // Fetch top categories data
+const HomePage = () => {
+  const [state, setState] = useState<HomepageState>({
+    topCategories: {},
+    homepageImages: {
+      mainImg: [],
+      promotionImg: [],
+      productImg: []
+    },
+    featuredProducts: [],
+    newArrivals: [],
+    bestSellers: [],
+    isLoading: true,
+    hasError: false
+  });
+
+
   useEffect(() => {
-    setIsLoading(true);
+    setState(prev => ({ ...prev, isLoading: true }));
     RemoteServices.getTopCatogires()
       .then((response) => {
         console.log("Top categories data:", response.data);
-        setTopCategories(response.data || {});
-        
-        // For demo purposes, set some sample products
-        const sampleProducts = [];
-        Object.values(response.data || {}).forEach(categoryProducts => {
-          if (categoryProducts && categoryProducts.length > 0) {
-            sampleProducts.push(...categoryProducts);
-          }
-        });
-        
-        setNewArrivals(sampleProducts.slice(0, 4));
-        setBestSellers(sampleProducts.slice(0, 4).reverse());
-        setIsLoading(false);
+        setState(prev => ({
+          ...prev,
+          topCategories: response.data || {},
+          homepageImages: {
+            mainImg: response.data?.homepageImg?.mainImg?.filter(img => img.image_url !== null) || [],
+            promotionImg: response.data?.homepageImg?.promotionImg?.filter(img => img.image_url !== null) || [],
+            productImg: response.data?.homepageImg?.productImg?.filter(img => img.image_url !== null) || []
+          },
+          isLoading: false
+        }));
       })
       .catch((error) => {
-        console.error("Error fetching products:", error);
-        setHasError(true);
-        setIsLoading(false);
+        console.error("Error fetching data:", error);
+        setState(prev => ({
+          ...prev,
+          hasError: true,
+          isLoading: false
+        }));
       });
   }, []);
 
   // Helper function to check if a category has products
   const hasCategoryProducts = (categoryName) => {
-    return topCategories[categoryName] && topCategories[categoryName].length > 0;
+    return state.topCategories[categoryName] && state.topCategories[categoryName].length > 0;
   };
 
   // Get total number of products across all categories
   const getTotalProductCount = () => {
     let count = 0;
-    Object.values(topCategories).forEach(products => {
+    Object.values(state.topCategories).forEach(products => {
       count += (products?.length || 0);
     });
     return count;
@@ -220,13 +309,13 @@ const HomePage = () => {
 
   // Get populated categories (categories with at least one product)
   const getPopulatedCategories = () => {
-    return Object.keys(topCategories).filter(category => 
-      topCategories[category] && topCategories[category].length > 0
+    return Object.keys(state.topCategories).filter(category => 
+      state.topCategories[category] && state.topCategories[category].length > 0
     );
   };
 
   // Reusable section header component
-  const SectionHeader = ({ title, subtitle, linkText, linkPath }) => (
+  const SectionHeader = ({ title, subtitle, linkText, linkPath }: SectionHeaderProps) => (
     <div className="flex justify-between items-end mb-8">
       <div>
         {subtitle && (
@@ -245,19 +334,16 @@ const HomePage = () => {
     </div>
   );
 
-  // Empty state component
-  const EmptyState = ({ message }) => (
-    <div className="flex flex-col items-center justify-center p-8 bg-gray-50 rounded-lg">
-      <ShoppingBag size={48} className="text-gray-300 mb-4" />
-      <p className="text-gray-500 text-center">{message}</p>
-    </div>
-  );
+
 
   return (
     <MainLayout>
-      <NotificationListener/>
+     
     
-      <HeroSection getTotalProductCount={getTotalProductCount}/>
+      <HeroSection 
+        getTotalProductCount={getTotalProductCount} 
+        productimgs={state.homepageImages.mainImg}
+      />
 
       {/* Value Props */}
       <section className="py-12 bg-white">
@@ -319,7 +405,7 @@ const HomePage = () => {
                           <h3 className="text-xl font-bold">{displayName}</h3>
                         </div>
                         <p className="opacity-80 mb-8">
-                          {topCategories[category]?.length || 0} products available
+                          {state.topCategories[category]?.length || 0} products available
                         </p>
                       </div>
                       <div className="flex items-center gap-2 font-medium group-hover:gap-3 transition-all duration-300">
@@ -336,7 +422,7 @@ const HomePage = () => {
       )}
 
       {/* Featured Collections */}
-      <section className="py-16 bg-white">
+      {/* <section className="py-16 bg-white">
         <div className="container mx-auto px-4">
           <div className="mb-10 text-center">
             <h2 className="text-3xl font-bold mb-3">Featured Collections</h2>
@@ -372,10 +458,12 @@ const HomePage = () => {
             ))}
           </div>
         </div>
-      </section>
+      </section> */}
+
+
 
       {/* Categories */}
-      <section className="py-16 bg-gray-50">
+      {/* <section className="py-16 bg-gray-50">
         <div className="container mx-auto px-4">
           <SectionHeader 
             title="Shop by Category" 
@@ -411,10 +499,12 @@ const HomePage = () => {
             })}
           </div>
         </div>
-      </section>
-
+      </section> */}
+      <ImgScrollonly 
+        images={state.homepageImages.promotionImg}
+      />
       {/* New Arrivals */}
-      <section className="py-16 bg-white">
+      {/* <section className="py-16 bg-white">
         <div className="container mx-auto px-4 py-8">
           <SectionHeader 
             title="New Arrivals" 
@@ -423,11 +513,11 @@ const HomePage = () => {
             linkPath="/category/isNew=true&stock=true" 
           />
           
-          {isLoading ? (
+          {state.isLoading ? (
             <LoadingSkeleton count={4} />
-          ) : newArrivals.length > 0 ? (
+          ) : state.newArrivals.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-              {newArrivals.map((product) => (
+              {state.newArrivals.map((product) => (
                 <div key={product.id} className="w-full">
                   <ProductCard product={product} />
                 </div>
@@ -437,7 +527,7 @@ const HomePage = () => {
             <EmptyState message="New arrivals coming soon! Check back later for our latest products." />
           )}
         </div>
-      </section>
+      </section> */}
 
       {/* Top Categories Products */}
       {getPopulatedCategories().map(category => {
@@ -458,7 +548,7 @@ const HomePage = () => {
               />
               
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-                {topCategories[category].slice(0, 4).map((product) => (
+                {state.topCategories[category].slice(0, 4).map((product) => (
                   <div key={product.id} className="w-full">
                     <ProductCard product={product} />
                   </div>
@@ -470,7 +560,7 @@ const HomePage = () => {
       })}
 
       {/* Local Nepali Products */}
-      <section className="py-16 bg-white">
+      {/* <section className="py-16 bg-white">
         <div className="container mx-auto px-4">
           <div className="mb-10 text-center">
             <h2 className="text-3xl font-bold mb-3">Local Treasures of Nepal</h2>
@@ -497,7 +587,7 @@ const HomePage = () => {
             ))}
           </div>
         </div>
-      </section>
+      </section> */}
 
       {/* Final CTA */}
       <section className="py-16 bg-black text-white">
@@ -507,7 +597,7 @@ const HomePage = () => {
             Explore our curated collections and find pieces that reflect your unique style and elevate your everyday living.
           </p>
           <Button size="lg" className="bg-white text-black hover:bg-white/90 px-8" asChild>
-            <Link to="/shop">Shop Now</Link>
+            <Link to="/all">Shop Now</Link>
           </Button>
         </div>
       </section>

@@ -5,11 +5,15 @@ import App from './App.tsx'
 import './index.css'
 import { GoogleOAuthProvider } from '@react-oauth/google';
 const rootElement = document.getElementById("root");
-if (!rootElement) throw new Error('Root element not found');
-  if ("serviceWorker" in navigator) {
+if ('serviceWorker' in navigator) {
   navigator.serviceWorker
-    .register("/firebase-messaging-sw.js")
-    .catch(console.error);
+    .register('/firebase-messaging-sw.js')
+    .then(reg => {
+      console.log('✅ Firebase SW registered:', reg);
+    })
+    .catch(err => {
+      console.error('❌ SW registration failed:', err);
+    });
 }
 createRoot(rootElement).render(
   <React.StrictMode>

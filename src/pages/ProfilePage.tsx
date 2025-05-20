@@ -7,6 +7,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/contexts/AuthContext';
 import { Package, User as UserIcon } from 'lucide-react';
+import RemoteServices from '@/RemoteService/Remoteservice';
+import { toast } from 'sonner';
 
 const ProfilePage = () => {
   const {  updateProfile } = useAuth();
@@ -31,11 +33,15 @@ const ProfilePage = () => {
     
     try {
       setIsSubmitting(true);
-      await updateProfile({
-        name: formData.name,
-        address: formData.address,
-        phone_number: formData.phone_number,
-      });
+    
+
+    const res =await  RemoteServices.updateProfile(formData)
+      if (res.status === 200) {
+        // Update local storage with new user data
+        const updatedUser = { ...user, ...formData };
+        localStorage.setItem('user', JSON.stringify(updatedUser));
+       toast.success('Profile updated successfully');
+      }
       setIsEditing(false);
     } catch (error) {
       console.error('Error updating profile:', error);
@@ -106,14 +112,14 @@ const ProfilePage = () => {
             <div className="bg-white rounded-lg border border-gray-200 p-6">
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-xl font-semibold">Personal Information</h2>
-                {/* {!isEditing && (
+                {!isEditing && (
                   <Button 
                     variant="outline" 
                     onClick={() => setIsEditing(true)}
                   >
                     Edit Profile
                   </Button>
-                )} */}
+                )}
               </div>
 
               <form onSubmit={handleSubmit}>

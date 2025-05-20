@@ -1,6 +1,7 @@
 import React from 'react';
-import { CheckCircle, ArrowRight } from 'lucide-react';
+import { CheckCircle, ArrowRight, Import, ImageIcon } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
+import { useFcmToken } from '@/hooks/useFcmToken';
 
 // Utility functions from the original component
 const formatCurrency = (amount) => {
@@ -21,31 +22,29 @@ const capitalizeFirstLetter = (str, fallback = '') => {
   return str.charAt(0).toUpperCase() + str.slice(1);
 };
 
+const getProductImage = (item) => {
+  if (!item?.product_img) {
+    return null;
+  }
+
+  try {
+    const baseUrl = import.meta.env.VITE_BASE_URL || 'http://localhost:8000';
+    return `${baseUrl}${item.product_img}`;
+  } catch (error) {
+    console.error('Error constructing image URL:', error);
+    return null;
+  }
+};
+
 export default function OrderConfirmation() {
   
   // The order data provided in the JSON
   const {state}=useLocation()
   const order =state.oderconform
-  // const order = {
-  //   id: "a45bd5ee-73b3-485c-9abe-fcc5e0c14b5c",
-  //   user_id: "4200e2bf-8bf8-40b1-ab90-06dc326c82b2",
-  //   items: [
-  //     {
-  //       quantity: 2,
-  //       price: "300.00",
-  //       category: "",
-  //       product_name: "Answer to an Enemy of Islam"
-  //     }
-  //   ],
-  //   total: 600.0,
-  //   status: "pending",
-  //   delivery_method: "pickup",
-  //   delivery_address: "Store Pickup",
-  //   created_at: "2025-04-11T17:28:42.793657Z",
-  //   sub_total: 600.0,
-  //   shipping_cost: 0.0,
-  //   ReceiverContact: "9866206703"
-  // };
+  
+   
+  
+
   
   return (
     <div className="bg-gray-50 min-h-screen py-8">
@@ -94,8 +93,22 @@ export default function OrderConfirmation() {
               <div className="space-y-4">
                 {order.items.map((item, index) => (
                   <div key={index} className="flex items-center">
-                    <div className="w-16 h-16 bg-gray-100 rounded flex items-center justify-center">
-                      <span className="text-gray-400 text-xs">No image</span>
+                    <div className="w-16 h-16 bg-gray-100 rounded flex items-center justify-center overflow-hidden">
+                      {getProductImage(item) ? (
+                        <img 
+                          src={getProductImage(item)} 
+                          alt={item?.product_name} 
+                          className="w-full h-full object-cover rounded"
+                          onError={(e) => {
+                            e.currentTarget.src = '/placeholder-image.jpg';
+                          }}
+                          loading="lazy"
+                        />
+                      ) : (
+                        <div className="flex items-center justify-center w-full h-full bg-gray-200">
+                          <ImageIcon className="w-8 h-8 text-gray-400" />
+                        </div>
+                      )}
                     </div>
                     <div className="ml-4 flex-1">
                       <h4 className="font-medium">{item.product_name}</h4>

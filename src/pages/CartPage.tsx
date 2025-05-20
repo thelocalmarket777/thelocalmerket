@@ -49,7 +49,7 @@ const CartPage = () => {
     const promoCodes = {
       'SAVE10': { type: 'percentage', value: 10, name: '10% Discount' },
       'SAVE20': { type: 'percentage', value: 20, name: '20% Discount' },
-      'FLAT500': { type: 'fixed', value: 500, name: 'NPR 500 Off' }
+      'FLAT500': { type: 'fixed', value: 500, name: '{currencysymbol} 500 Off' }
     };
 
     if (!promoCode.trim()) {
@@ -109,7 +109,7 @@ const CartPage = () => {
       navigate('/login', { state: { from: '/checkout' } });
     }
   };
-
+ const currencysymbol= 'Rs.'
   return (
     <MainLayout>
       <div className="container mx-auto px-4 py-8">
@@ -145,7 +145,8 @@ const CartPage = () => {
                   {items.map((item) => (
                     <div key={item.id}>
                       <div className="grid sm:grid-cols-12 gap-4 py-4 items-center">
-                        {/* Product */}
+                       
+                        
                         <div className="sm:col-span-6 flex items-center gap-4">
                           <Link to={`/product/${item.product.id}`} className="shrink-0 relative">
                             {item.product && item.product.media && item.product.media.length > 0 ? (
@@ -159,7 +160,7 @@ const CartPage = () => {
                             ) : (
                               <div className="w-24 h-24 rounded-md overflow-hidden bg-gray-100 border border-gray-200 relative group">
                                 <img
-                                  src={item.product.imageUrl}
+                                  src={item.product.image_url || item.product.image}
                                   alt={item.product.name}
                                   className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
                                 />
@@ -192,10 +193,10 @@ const CartPage = () => {
                           <div className="font-medium">
                             <div className='flex flex-col'>
                               <span className="text-gray-400 line-through text-sm mr-2">
-                                NPR {parseFloat(item.product.price).toFixed(2)}
+                                {currencysymbol} {parseFloat(item.product.price).toFixed(2)}
                               </span>
                               <span className="text-brand-blue">
-                                NPR {parseFloat(item.product.finalprice).toFixed(2)}
+                                {currencysymbol} {parseFloat(item.product.finalprice).toFixed(2)}
                               </span>
                             </div>
                           </div>
@@ -241,7 +242,7 @@ const CartPage = () => {
                           <div>
                             <div className="sm:hidden text-sm text-gray-500">Total:</div>
                             <div className="font-medium">
-                              NPR {(item.product.finalprice * item.quantity).toFixed(2)}
+                              {currencysymbol} {(item.product.finalprice * item.quantity).toFixed(2)}
                             </div>
                           </div>
                           <button
@@ -291,8 +292,8 @@ const CartPage = () => {
             </div>
 
             <div className="lg:col-span-1 space-y-6">
-              {/* Promo Code Section */}
-              <Card className="shadow-sm">
+           
+              {/* <Card className="shadow-sm">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Tag size={18} className="text-brand-blue" />
@@ -338,7 +339,7 @@ const CartPage = () => {
                     </div>
                   )}
                 </CardContent>
-              </Card>
+              </Card> */}
 
               {/* Order Summary */}
               <Card className="shadow-sm">
@@ -348,7 +349,7 @@ const CartPage = () => {
                 <CardContent className="space-y-4 pt-4">
                   <div className="flex justify-between items-center">
                     <span className="text-gray-600">Subtotal ({itemCount} {itemCount === 1 ? 'item' : 'items'})</span>
-                    <span className="font-medium">NPR {subtotal.toFixed(2)}</span>
+                    <span className="font-medium">{currencysymbol} {subtotal.toFixed(2)}</span>
                   </div>
 
                   {appliedPromo && (
@@ -357,7 +358,7 @@ const CartPage = () => {
                         <Tag size={14} />
                         Discount ({appliedPromo.name})
                       </span>
-                      <span className="font-medium">- NPR {discount.toFixed(2)}</span>
+                      <span className="font-medium">- {currencysymbol} {discount.toFixed(2)}</span>
                     </div>
                   )}
 
@@ -369,7 +370,7 @@ const CartPage = () => {
                   <Separator />
                   <div className="flex justify-between items-center pt-2">
                     <span className="font-semibold">Estimated Total</span>
-                    <span className="font-semibold text-lg">NPR {total.toFixed(2)}</span>
+                    <span className="font-semibold text-lg">{currencysymbol} {total.toFixed(2)}</span>
                   </div>
                 </CardContent>
                 <CardFooter className="flex flex-col gap-4">

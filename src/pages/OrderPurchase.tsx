@@ -74,7 +74,7 @@ const OrderPurchase= () => {
               {order?.order_items?.map((item, index) => (
                 <div key={index} className="flex items-center">
                   <div className="w-16 h-16 bg-gray-100 rounded flex items-center justify-center">
-                    <ImageIcon className="text-gray-400" size={24} />
+                <img src={import.meta.env.VITE_BASE_URL + item?.product_img} alt={item?.product_name} className="w-full h-full object-cover rounded" />
                   </div>
                   <div className="ml-4 flex-1">
                     <h4 className="font-medium">{item?.product_name}</h4>

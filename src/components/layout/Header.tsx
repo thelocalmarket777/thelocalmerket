@@ -24,6 +24,8 @@ import { useToast } from '@/components/ui/use-toast';
 import RemoteServices from '@/RemoteService/Remoteservice';
 import logoimg from '@/assects/image/logobgremove.jpg';
 
+
+
 const Header = () => {
   const { itemCount } = useCart();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -34,6 +36,7 @@ const Header = () => {
   const { toast } = useToast();
   const searchInputRef = useRef(null);
 
+ 
   // Safe JSON parse for user data
   const user = (() => {
     try {
@@ -140,6 +143,8 @@ const Header = () => {
     { name: 'Painting', path: '/category/Painting', icon: <Palette size={16} /> },
   ];
   const notifications = 2
+
+
   return (
     <header className="sticky top-0 z-50 bg-white border-b border-gray-200 shadow-md">
       <div className="container mx-auto px-4 py-3">
@@ -171,13 +176,13 @@ const Header = () => {
               <Input
                 type="search"
                 placeholder="Search products..."
-                className="w-full h-10 pl-10 pr-4 text-sm rounded-full border-2 border-gray-200 focus:border-teal-300 focus-visible:ring-1 focus-visible:ring-teal-300 transition-all"
+                className="w-full h-10 pl-10 pr-4 text-sm rounded-full border-2 border-gray-200 focus:border-transparent focus-visible:ring-1 transition-all"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
               <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
                 {isLoading ? (
-                  <div className="animate-spin w-4 h-4 border-2 border-teal-500 border-t-transparent rounded-full" />
+                  <div className="animate-spin w-4 h-4 border-2  border-t-transparent rounded-full" />
                 ) : (
                   <Search size={16} />
                 )}
@@ -200,10 +205,10 @@ const Header = () => {
                         setResults([]);
                       }}
                     >
-                      {item.image && (
+                      {item.image_url && (
                         <div className="w-10 h-10 rounded overflow-hidden flex-shrink-0 bg-gray-100 border border-gray-200">
                           <img
-                            src={item.image}
+                            src={item.image_url}
                             alt={item.name}
                             className="w-full h-full object-cover"
                             onError={(e) => {
@@ -212,10 +217,13 @@ const Header = () => {
                           />
                         </div>
                       )}
-                      <div className="flex-1 min-w-0">
+                      <div className="flex-1 flex-row min-w-0">
+                      
                         <p className="font-medium text-gray-800 truncate">{item.name}</p>
-                        {item.price && (
-                          <p className="text-teal-600 text-xs font-semibold">${item.price.toFixed(2)}</p>
+                       
+                       
+                          {item.category && (
+                          <p className="text-xs text-gray-500 mt-1">{item.category}</p>
                         )}
                       </div>
                     </Link>
@@ -438,10 +446,10 @@ const Header = () => {
                         setSearchDropdownOpen(false);
                       }}
                     >
-                      {item.image && (
+                      {item.image_url && (
                         <div className="w-16 h-16 rounded-md overflow-hidden flex-shrink-0 bg-gray-100 border border-gray-200">
                           <img
-                            src={item.image}
+                            src={item.image_url}
                             alt={item.name}
                             className="w-full h-full object-cover"
                             onError={(e) => {
@@ -453,7 +461,7 @@ const Header = () => {
                       <div className="flex-1 min-w-0">
                         <p className="font-medium text-gray-800">{item.name}</p>
                         {item.price && (
-                          <p className="text-teal-600 text-sm font-semibold mt-1">${item.price.toFixed(2)}</p>
+                          <p className="text-teal-600 text-sm font-semibold mt-1">${item.price}</p>
                         )}
                         {item.category && (
                           <p className="text-xs text-gray-500 mt-1">{item.category}</p>

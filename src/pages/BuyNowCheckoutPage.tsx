@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useMemo } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import MainLayout from '@/components/layout/MainLayout';
 import { Button } from '@/components/ui/button';
@@ -8,7 +8,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Textarea } from '@/components/ui/textarea';
 import { useCart } from '@/contexts/CartContext';
 import { useAuth } from '@/contexts/AuthContext';
-import { AlertCircle, CheckCircle2, Loader2, Clock, MapPin, Truck, Contact, Info } from 'lucide-react';
+import { AlertCircle, CheckCircle2, Loader2, Clock, MapPin, Truck, Contact, Info, Star } from 'lucide-react';
 import { DeliveryMethod, FormData } from '@/types';
 import { useToast } from '@/components/ui/use-toast';
 import { mockDeliveryMethods } from '@/lib/api';
@@ -19,12 +19,14 @@ import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
-const CheckoutPage = () => {
-  const { items, subtotal, clearCart } = useCart();
-  const navigate = useNavigate();
+const BuyNowCheckoutPage = () => {
+  const {      buynowcart,
+      clearbuynowCart } = useCart();
+  const navigate = useNavigate(); 
   const { toast } = useToast();
 
-  const deliveryMethods = useMemo(() => [
+  // Enhanced delivery methods with icons and priority indicators
+  const enhancedDeliveryMethods: DeliveryMethod[] = [
     {
       id: 'pickup',
       name: 'I will pick up',
@@ -50,36 +52,31 @@ const CheckoutPage = () => {
       price: 80,
       icon: Truck
     }
-  ], []);
+  ];
 
-  const [formData, setFormData] = useState<FormData>(() => {
-    const user = JSON.parse(localStorage.getItem('user') || '{}');
-    return {
-      address: user?.address || '',
-      city: user?.city || '',
-      zipCode: user?.zip_code || '',
-      phone: user?.phone_number || '',
-      deliveryMethod: deliveryMethods[0]?.id || '',
-      notes: '',
-      paymentMethod: 'cash',
-    };
-  });
-
+  const [deliveryMethods, setDeliveryMethods] = useState<DeliveryMethod[]>(enhancedDeliveryMethods || []);
   const [isLoading, setIsLoading] = useState(false);
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [submitAttempted, setSubmitAttempted] = useState(false);
-  const currencySymbol= 'Rs.';
-      const { user, token } = useMemo(() => ({
-        token: localStorage.getItem('token'),
-        user: JSON.parse(localStorage.getItem('user') || '{}')
-      }), []);
-  useEffect(() => {
-    if (items.length === 0) {
-      navigate('/cart');
-      return;
-    }
 
+  const token = localStorage.getItem('token');
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  
+  const [formData, setFormData] = useState<FormData>({
+    address: user?.address || '',
+    city: user?.city || '',
+    zipCode: user?.zip_code || '',
+    phone: user?.phone_number || '',
+    deliveryMethod: enhancedDeliveryMethods[0]?.id || '', // Set default value
+    notes: '',
+    paymentMethod: 'cash', // Default payment method
+  });
+
+  const currencySymbol = 'NPR';
+
+
+  useEffect(() => {
 
 
     if (!user || !token) {
@@ -87,9 +84,12 @@ const CheckoutPage = () => {
       return;
     }
 
-    setIsLoading(false);
-  }, [items.length, navigate]);
+    // Set delivery methods
+    setDeliveryMethods(enhancedDeliveryMethods);
 
+    
+    setIsLoading(false);
+  }, [ user, navigate, toast]);
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
@@ -141,89 +141,83 @@ const CheckoutPage = () => {
     method => method.id === formData.deliveryMethod
   );
 
+
   
-  const calculatedTotal = subtotal + (selectedDeliveryMethod?.price || 0);
-  
-  const handleSubmit = useCallback(async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitAttempted(true);
 
-    const token = localStorage.getItem('token');
-    if (!token) {
+    if (!token || !user?.id) {
       toast({
         variant: 'destructive',
         title: 'Login Required',
         description: 'Please log in to complete your purchase',
       });
-      navigate('/login', { state: { from: '/checkout' } });
+      navigate('/login', { state: { from: '/checkout/buy-now' } });
       return;
     }
 
-    // Validate form
-    if (!validateForm()) {
+    if (!buynowcart || Object.keys(buynowcart).length === 0) {
       toast({
         variant: 'destructive',
-        title: 'Missing or Invalid Information',
-        description: 'Please correct the highlighted fields',
+        title: 'Invalid Order',
+        description: 'No product selected for purchase',
       });
-      // Scroll to the first error
+      navigate('/');
+      return;
+    }
+
+    if (!validateForm()) {
       const firstErrorField = document.querySelector('[aria-invalid="true"]');
-      if (firstErrorField) {
-        firstErrorField.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }
+      firstErrorField?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       return;
     }
 
     setIsPlacingOrder(true);
-    const calculatedSubtotal = subtotal; // The original cart subtotal
 
-    const shippingCost = selectedDeliveryMethod?.price || 0;
-    const calculatedTotal = calculatedSubtotal + shippingCost;
-    const orderData = {
-      user_id: user.id,
-      items: items.map(item => ({
-        product_id: item.product.id,
-        quantity: item.quantity,
-        price: item.product.price,
-        category: item.product.category,
-        name: item.product.name
-      })),
-      shipping_address: formData.deliveryMethod === 'pickup' 
-        ? 'Store Pickup' 
-        : `${formData.address}, ${formData.city}, ${formData.zipCode}`,
-      delivery_method: formData.deliveryMethod,
-      subtotal: subtotal , // Fixed: using promoDiscount instead of undefined variable
-      shipping_cost: selectedDeliveryMethod?.price || 0,
-      total_amount: calculatedTotal,
-      payment_method: formData.paymentMethod,
-      receiverContact: formData.phone,
-      notes:formData.notes
-    };
-
-    // Place the order
     try {
+      const orderData = {
+        user_id: user.id,
+        items: [{
+          product_id: buynowcart.id,
+          quantity: 1,
+          price: buynowcart.finalprice,
+          name: buynowcart.name,
+          final_price: buynowcart.finalprice,
+          original_price: buynowcart.price,
+          discount: buynowcart.discount
+        }],
+        shipping_address: formData.deliveryMethod === 'pickup' 
+          ? 'Store Pickup' 
+          : `${formData.address}, ${formData.city}, ${formData.zipCode}`,
+        delivery_method: formData.deliveryMethod,
+        subtotal: buynowcart.finalprice,
+        shipping_cost: selectedDeliveryMethod?.price || 0,
+        total_amount: calculatedTotal,
+        payment_method: formData.paymentMethod,
+        receiverContact: formData.phone,
+        notes: formData.notes || ''
+      };
+
       const res = await RemoteServices.orderPlaced(orderData);
-      const order = res.data;
-      console.log('res', res);
       
-      await Promise.all([
-        clearCart(),
-        localStorage.removeItem('itemcart'),
-        localStorage.setItem('orderconform', JSON.stringify(order))
-      ]);
+      if (res.data) {
+        const order = res.data;
+        clearbuynowCart();
+        localStorage.removeItem('buynowcart');
+        localStorage.setItem('orderconform', JSON.stringify(res.data));
 
-      // Show success notification
-      toast({
-        title: 'Order Placed Successfully',
-        description: `Your order #${order.id} has been confirmed`,
-      });
+        toast({
+          title: 'Order Placed Successfully',
+          description: `Order #${res.data.id} has been confirmed`,
+        });
 
-      // Redirect to order confirmation
+     
+ 
       navigate(`/order-confirmation/`, { state: { oderconform: order } });
-    } catch (error) {
-      console.error('Order placement error:', error);
-      const errorMessage = error instanceof Error ? error.message : 'An error occurred while processing your order';
-
+      }
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.message || error.message || 'Failed to place order';
       toast({
         variant: 'destructive',
         title: 'Order Failed',
@@ -232,9 +226,8 @@ const CheckoutPage = () => {
     } finally {
       setIsPlacingOrder(false);
     }
-  }, [formData, items, clearCart, navigate, toast]);
+  };
 
-  // Get the badge color based on priority
   const getPriorityBadge = (priority?: string) => {
     if (!priority) return null;
     
@@ -254,12 +247,14 @@ const CheckoutPage = () => {
 
   const isAddressDisabled = formData.deliveryMethod === 'pickup';
 
+  const calculatedTotal = buynowcart.finalprice + (selectedDeliveryMethod?.price || 0);
+
   return (
     <MainLayout>
       <div className="container mx-auto px-4 py-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-6">Checkout</h1>
 
-        {items.length === 0 ? (
+        {buynowcart.length === 0 ? (
           <Alert variant="destructive" className="mb-6">
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>
@@ -321,7 +316,7 @@ const CheckoutPage = () => {
                               </div>
                             </div>
                             <div className="font-medium">
-                              {method.price > 0 ? `${currencySymbol} ${method.price.toFixed(2)}` : 'Free'}
+                              {method.price > 0 ? `${currencySymbol} ${method.price}` : 'Free'}
                             </div>
                           </div>
                         ))}
@@ -498,59 +493,7 @@ const CheckoutPage = () => {
                         </div>
                       </div>
                     </div>
-                    
-                    {/* Commented out payment methods - can be enabled when implemented
-                    <div className="flex items-center justify-between border border-gray-200 rounded-lg p-4 hover:bg-gray-50 cursor-pointer">
-                      <div className="flex items-center gap-3">
-                        <RadioGroupItem value="esewa" id="esewa" />
-                        <div className="flex items-center">
-                          <div className="w-8 h-8 mr-2">
-                            <img 
-                              src="/api/placeholder/32/32" 
-                              alt="eSewa" 
-                              className="w-full h-full object-contain" 
-                            />
-                          </div>
-                          <div>
-                            <Label
-                              htmlFor="esewa"
-                              className="font-medium cursor-pointer"
-                            >
-                              eSewa
-                            </Label>
-                            <p className="text-sm text-gray-500">
-                              Pay securely with your eSewa account
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-center justify-between border border-gray-200 rounded-lg p-4 hover:bg-gray-50 cursor-pointer">
-                      <div className="flex items-center gap-3">
-                        <RadioGroupItem value="khalti" id="khalti" />
-                        <div className="flex items-center">
-                          <div className="w-8 h-8 mr-2">
-                            <img 
-                              src="/api/placeholder/32/32" 
-                              alt="Khalti" 
-                              className="w-full h-full object-contain" 
-                            />
-                          </div>
-                          <div>
-                            <Label
-                              htmlFor="khalti"
-                              className="font-medium cursor-pointer"
-                            >
-                              Khalti
-                            </Label>
-                            <p className="text-sm text-gray-500">
-                              Pay securely with your Khalti wallet
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    </div> */}
+                   
                   </RadioGroup>
                 </CardContent>
               </Card>
@@ -560,72 +503,75 @@ const CheckoutPage = () => {
             <div className="lg:col-span-1">
               <Card className="sticky top-24">
                 <CardHeader className="pb-3">
-                  <CardTitle>Order Summary</CardTitle>
+                  <CardTitle>Quick Buy Summary</CardTitle>
                 </CardHeader>
                 <CardContent className="pb-0">
-                  <div className="max-h-64 overflow-y-auto mb-6">
-                    {items.map((item) => (
-                      <div key={item.id} className="flex justify-between py-3 border-b border-gray-100 last:border-b-0">
-                        <div className="flex items-start">
-                          <div className="w-12 h-12 rounded-md overflow-hidden bg-gray-100 border border-gray-200 mr-3">
-                            <img
-                              src={item.product.image_url || (item.product.media && item.product.media[0]?.file)}
-                              alt={item.product.name}
-                              className="w-full h-full object-cover"
-                            />
-                          </div>
-                          <div>
-                            <h4 className="text-sm font-medium line-clamp-1">{item.product.name}</h4>
-                            <p className="text-xs text-gray-500">Qty: {item.quantity} * {item.product.finalprice}</p>
-                          </div>
-                        </div>
-                        <div className="text-sm font-medium">
-                          {currencySymbol} {(item.product.finalprice * item.quantity).toFixed(2)}
-                          {parseFloat(item.product.discount) > 0 && (
-                            <span className='mx-1 items-center'>
+                  <div className="space-y-4">
+                    {/* Product Display */}
+                    <div className="flex items-start gap-4 p-4 bg-gray-50 rounded-lg">
+                      <div className="w-20 h-20 rounded-lg overflow-hidden bg-white border">
+                        <img
+                          src={buynowcart.image_url  || buynowcart.image}
+                          alt={buynowcart.name}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="font-medium">{buynowcart.name}</h3>
                         
+                        {/* Price Display with Tooltip */}
+                        <div className="mt-2 flex items-center gap-2">
+                          <span className="text-lg font-bold">
+                            {currencySymbol} {buynowcart.finalprice}
+                          </span>
+                          {parseFloat(buynowcart.discount) > 0 && (
+                            <>
+                              <span className="text-sm line-through text-gray-500">
+                                {currencySymbol} {buynowcart.price}
+                              </span>
                               <TooltipProvider>
                                 <Tooltip>
                                   <TooltipTrigger>
                                     <Info size={16} className="text-blue-500" />
                                   </TooltipTrigger>
                                   <TooltipContent>
-                                    <p>Discount: {item.product.discount}%</p>
-                                    <p>You each save: {currencySymbol} {(parseFloat(item.product.price) - item.product.finalprice).toFixed(2)}</p>
+                                    <p>Discount: {buynowcart.discount}%</p>
+                                    <p>You save: {currencySymbol} {(parseFloat(buynowcart.price) - buynowcart.finalprice)}</p>
                                   </TooltipContent>
                                 </Tooltip>
                               </TooltipProvider>
-                            </span>
+                            </>
                           )}
                         </div>
-                         
-                      </div>
-                    ))}
-                  </div>
 
-                  <div className="space-y-3">
-                    <div className="flex justify-between items-center">
-                      <span className="text-gray-600">Subtotal</span>
-                      <span className="font-medium">{currencySymbol} {subtotal.toFixed(2)}</span>
+                      
+                      </div>
                     </div>
-                    
-                 
-                    
-                    <div className="flex justify-between items-center">
-                      <span className="text-gray-600">Shipping</span>
-                      <span className="font-medium">
-                        {selectedDeliveryMethod?.price === 0 
-                          ? 'Free' 
-                          : selectedDeliveryMethod 
-                            ? `${currencySymbol} ${selectedDeliveryMethod.price.toFixed(2)}` 
-                            : '-'
-                        }
-                      </span>
-                    </div>
-                    <Separator />
-                    <div className="flex justify-between items-center pt-1">
-                      <span className="font-semibold">Total</span>
-                      <span className="font-semibold text-lg">{currencySymbol} {calculatedTotal.toFixed(2)}</span>
+
+                    {/* Price Summary */}
+                    <div className="space-y-3 pt-3">
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-600">Item Price</span>
+                        <span>{currencySymbol} {buynowcart.finalprice}</span>
+                      </div>
+                      
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-600">Shipping</span>
+                        <span>
+                          {selectedDeliveryMethod?.price === 0 
+                            ? 'Free' 
+                            : `${currencySymbol} ${selectedDeliveryMethod?.price || '0.00'}`
+                          }
+                        </span>
+                      </div>
+                      <Separator />
+                      
+                      <div className="flex justify-between items-center pt-1">
+                        <span className="font-semibold">Total</span>
+                        <span className="font-semibold text-lg">
+                          {currencySymbol} {calculatedTotal}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </CardContent>
@@ -667,4 +613,4 @@ const CheckoutPage = () => {
   );
 };
 
-export default CheckoutPage;
+export default BuyNowCheckoutPage;

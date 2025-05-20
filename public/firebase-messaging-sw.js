@@ -1,6 +1,8 @@
 // public/firebase-messaging-sw.js
-importScripts("https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js");
-importScripts("https://www.gstatic.com/firebasejs/9.6.10/firebase-messaging-compat.js");
+importScripts(
+  'https://www.gstatic.com/firebasejs/11.7.3/firebase-app-compat.js',
+  'https://www.gstatic.com/firebasejs/11.7.3/firebase-messaging-compat.js'
+);
 
 firebase.initializeApp({
   apiKey: 'AIzaSyAxlSjz8igOSPHP94EeUEAwsk-1WnVzyDs',
@@ -12,6 +14,7 @@ firebase.initializeApp({
 
 const messaging = firebase.messaging();
 messaging.onBackgroundMessage((payload) => {
+  console.log('Received background message ', payload);
   const { title, body } = payload.notification;
   self.registration.showNotification(title, { body });
 });
