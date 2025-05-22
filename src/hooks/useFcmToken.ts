@@ -5,7 +5,8 @@ import { getToken, onMessage } from "firebase/messaging";
 import { toast } from "sonner";
 import { messaging } from "../firebaseConfig";
 
-const API_BASE = "http://127.0.0.1:8000/api/";
+// const API_BASE = "http://127.0.0.1:8000/api/";
+const API_BASE = "https://backendshop-oy2c.onrender.com/api/";
 
 export function useFcmToken() {
   const [fcmToken, setFcmToken] = useState<string | null>(null);

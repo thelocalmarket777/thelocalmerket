@@ -311,9 +311,9 @@ const LoginPage = () => {
   const handleGoogleLogin = async (credentialResponse) => {
     setIsGoogleLoading(true);
     const id_token = credentialResponse.credential;
-    //  const address :'https://backendshop-production-963a.up.railway.app/api/'
-    const address = 'http://127.0.0.1:8000/api/'
-    // const address =    'https://backendshop-production-0a96.up.railway.app/api/'
+     const address ='https://backendshop-oy2c.onrender.com/api/' // Use your actual backend address here
+    // const address = 'http://127.0.0.1:8000/api/'
+
     try {
       const response = await fetch(`${address}account/auth/google/login/`, {
         method: 'POST',
