@@ -205,10 +205,10 @@ const Header = () => {
                         setResults([]);
                       }}
                     >
-                      {item.image_url && (
+                      {item.image && (
                         <div className="w-10 h-10 rounded overflow-hidden flex-shrink-0 bg-gray-100 border border-gray-200">
                           <img
-                            src={item.image_url}
+                            src={item.image}
                             alt={item.name}
                             className="w-full h-full object-cover"
                             onError={(e) => {
@@ -446,10 +446,10 @@ const Header = () => {
                         setSearchDropdownOpen(false);
                       }}
                     >
-                      {item.image_url && (
+                      {item.image && (
                         <div className="w-16 h-16 rounded-md overflow-hidden flex-shrink-0 bg-gray-100 border border-gray-200">
                           <img
-                            src={item.image_url}
+                            src={item.image}
                             alt={item.name}
                             className="w-full h-full object-cover"
                             onError={(e) => {

@@ -15,6 +15,7 @@ interface CartContextType {
   buynowCartfunc: (product: Product, quantity?: number) => void;
   clearbuynowCart: () => void;
   buynowcart: CartItem[];
+  buynowquantity?: number;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -35,6 +36,13 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return [];
     }
   });
+const [buynowquantity, setbuynowquantity] = useState<number>(() => {
+  try {
+    return Number(localStorage.getItem('buynowquantity')) || 1;
+  } catch {
+    return 1;
+  }
+});
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const { toast } = useToast();
 
@@ -80,11 +88,17 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
   const buynowCartfunc = (product,quantity) => {
     localStorage.setItem('buynowcart', JSON.stringify(product));
+      localStorage.setItem('buynowquantity', String(quantity));
+console.log('quantity', quantity);
     setbuynowcart(product);
+    setbuynowquantity(quantity);
   };
   const clearbuynowCart = () => {
+     localStorage.removeItem('buynowquantity');
     localStorage.removeItem('buynowcart');
     setbuynowcart([]);
+    setbuynowquantity(1);
+     
   };
 
 
@@ -98,8 +112,9 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     clearCart,
     buynowCartfunc,
     buynowcart,
-    clearbuynowCart
-  }), [items, memoizedValues, addItem]);
+    clearbuynowCart,
+    buynowquantity,
+  }), [items, memoizedValues, addItem,buynowquantity, buynowcart, clearbuynowCart ]);
 
   return <CartContext.Provider value={cartValue}>{children}</CartContext.Provider>;
 };

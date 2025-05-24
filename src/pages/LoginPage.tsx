@@ -49,6 +49,13 @@ const LoginPage = () => {
   const [otpError, setOtpError] = useState<string | null>(null);
   const [resetSuccess, setResetSuccess] = useState(false);
 
+  const [togglepassword, settogglepassword] = useState({
+    registerPassword: false,
+    registerConfirmPassword: false,
+    loginpassowrd: false,
+
+  })
+
   // Email validation regex
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -358,6 +365,14 @@ const LoginPage = () => {
     }
   };
 
+  const handlepasswordtoggle = async(e: React.MouseEvent<HTMLInputElement>) => {
+    e.preventDefault();
+    settogglepassword({ ...togglepassword, loginpassowrd: !togglepassword.loginpassowrd })
+setTimeout(() => {
+      settogglepassword({ ...togglepassword, loginpassowrd: !togglepassword.loginpassowrd })
+}, 2000);
+    
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
@@ -428,7 +443,10 @@ const LoginPage = () => {
                     </div>
                     <Input
                       id="password"
-                      type="password"
+                      
+                      type={togglepassword.loginpassowrd ? "text" : "password"}
+                      onClick={handlepasswordtoggle
+                       }
                       value={loginPassword}
                       onChange={(e) => setLoginPassword(e.target.value)}
                       placeholder="••••••••"
@@ -491,7 +509,9 @@ const LoginPage = () => {
                       <Label htmlFor="register-password" className="font-medium">Password</Label>
                       <Input
                         id="register-password"
-                        type="password"
+                      
+                        type={togglepassword.registerPassword ? "text" : "password"}
+                        onClick={() => settogglepassword({ ...togglepassword, registerPassword: !togglepassword.registerPassword })}
                         value={registerPassword}
                         onChange={(e) => setRegisterPassword(e.target.value)}
                         placeholder="••••••••"
@@ -504,7 +524,8 @@ const LoginPage = () => {
                       <Label htmlFor="confirm-password" className="font-medium">Confirm Password</Label>
                       <Input
                         id="confirm-password"
-                        type="password"
+                        type={togglepassword.registerConfirmPassword ? "text" : "password"}
+                        onClick={() => settogglepassword({ ...togglepassword, registerConfirmPassword: !togglepassword.registerConfirmPassword })}
                         value={registerConfirmPassword}
                         onChange={(e) => setRegisterConfirmPassword(e.target.value)}
                         placeholder="••••••••"

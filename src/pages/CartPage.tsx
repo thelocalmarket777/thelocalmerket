@@ -114,13 +114,13 @@ const CartPage = () => {
     <MainLayout>
       <div className="container mx-auto px-4 py-8">
         <div className="flex items-center justify-between mb-6">
-          <Link
-            to="/"
-            className="text-sm font-medium text-gray-600 hover:text-brand-blue flex items-center transition-colors duration-200"
+          <span  onClick={() => navigate(-1)}
+            
+            className="text-sm font-medium text-gray-600 cursor-pointer hover:text-brand-blue flex items-center transition-colors duration-200"
           >
             <ArrowLeft size={16} className="mr-2" />
             Continue Shopping
-          </Link>
+          </span>
 
           <Badge variant="outline" className="px-3 py-1">
             {itemCount} {itemCount === 1 ? 'item' : 'items'} in cart
@@ -149,23 +149,13 @@ const CartPage = () => {
                         
                         <div className="sm:col-span-6 flex items-center gap-4">
                           <Link to={`/product/${item.product.id}`} className="shrink-0 relative">
-                            {item.product && item.product.media && item.product.media.length > 0 ? (
-                              <div className="w-24 h-24 rounded-md overflow-hidden bg-gray-100 border border-gray-200 relative group">
+                          {item.product.image &&   <div className="w-24 h-24 rounded-md overflow-hidden bg-gray-100 border border-gray-200 relative group">
                                 <img
-                                  src={item.product.media[0].file}
-                                  alt={item.product.media[0].description || item.product.name}
-                                  className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
-                                />
-                              </div>
-                            ) : (
-                              <div className="w-24 h-24 rounded-md overflow-hidden bg-gray-100 border border-gray-200 relative group">
-                                <img
-                                  src={item.product.image_url || item.product.image}
+                                  src={ item.product.image}
                                   alt={item.product.name}
                                   className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
                                 />
-                              </div>
-                            )}
+                              </div>}
                           </Link>
                           <div className="flex-1 min-w-0">
                             <Link
@@ -261,7 +251,7 @@ const CartPage = () => {
               </Card>
 
               {/* Product Gallery - Optional Section */}
-              {items.length > 0 && items[0].product && items[0].product.media && items[0].product.media.length > 1 && (
+              {/* {items.length > 0 && items[0].product && items[0].product.media && items[0].product.media.length > 1 && (
                 <Card className="mt-6 shadow-sm overflow-hidden">
                   <CardHeader className="pb-3">
                     <CardTitle className="text-sm">Product Gallery</CardTitle>
@@ -288,7 +278,7 @@ const CartPage = () => {
                     </Carousel>
                   </CardContent>
                 </Card>
-              )}
+              )} */}
             </div>
 
             <div className="lg:col-span-1 space-y-6">

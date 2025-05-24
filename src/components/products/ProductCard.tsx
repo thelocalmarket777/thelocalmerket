@@ -41,7 +41,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
       imageHeight: 'h-36',
       padding: 'p-3',
       titleClamp: 'line-clamp-1',
-      titleHeight: 'h-6',
+
       buttonSize: 'sm' as const,
       iconSize: 12,
       heartSize: 16
@@ -50,7 +50,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
       imageHeight: 'h-48',
       padding: 'p-4',
       titleClamp: 'line-clamp-2',
-      titleHeight: 'h-12',
+
       buttonSize: 'sm' as const,
       iconSize: 14,
       heartSize: 20
@@ -59,7 +59,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
       imageHeight: 'h-56',
       padding: 'p-5',
       titleClamp: 'line-clamp-2',
-      titleHeight: 'h-14',
+
       buttonSize: 'default' as const,
       iconSize: 16,
       heartSize: 22
@@ -178,21 +178,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
 
  
 
-  const getProductImage = () => {
-    if (imageError) {
-      return "/api/placeholder/300/300";
-    }
-    
-    if (product.image_url) {
-      return product.image_url;
-    }
-    
-    if (product.media && product.media.length > 0) {
-      return product.media[0].file;
-    }
-    
-    return "/api/placeholder/300/300";
-  };
+  
 
   return (
     <div 
@@ -219,11 +205,11 @@ const ProductCard: React.FC<ProductCardProps> = ({
             </button>
           </div>
         </div>
-        <div className={`${config.imageHeight} w-full overflow-hidden bg-gray-50 relative`}>
+        <div className={`${config.imageHeight} w-full  overflow-hidden bg-gray-50 relative`}>
           <img
-            src={getProductImage()}
+            src={product.image}
             alt={product.name}
-            className="h-full w-full object-contain object-center transition-transform duration-300 group-hover:scale-105"
+            className="h-full w-full object-fill  transition-transform duration-300 group-hover:scale-105"
             onError={() => setImageError(true)}
             loading="lazy"
           />
@@ -236,7 +222,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
         </div>
 
         <div className={`flex flex-1 flex-col ${config.padding}`}>
-          <h3 className={`font-semibold text-gray-900 ${config.titleClamp} ${config.titleHeight} leading-tight`}>
+          <h3 className={`font-semibold text-gray-900 ${config.titleClamp} leading-tight`}>
             {product?.name}
           </h3>
           {renderRating()}

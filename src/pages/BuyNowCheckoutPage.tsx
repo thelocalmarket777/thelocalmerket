@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import MainLayout from '@/components/layout/MainLayout';
 import { Button } from '@/components/ui/button';
@@ -20,8 +20,8 @@ import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 const BuyNowCheckoutPage = () => {
-  const {      buynowcart,
-      clearbuynowCart } = useCart();
+  const { buynowcart, clearbuynowCart, buynowquantity } = useCart();
+  console.log('buynowquantity:', buynowquantity);
   const navigate = useNavigate(); 
   const { toast } = useToast();
 
@@ -84,7 +84,7 @@ const BuyNowCheckoutPage = () => {
       return;
     }
 
-    // Set delivery methods
+
     setDeliveryMethods(enhancedDeliveryMethods);
 
     
@@ -94,7 +94,7 @@ const BuyNowCheckoutPage = () => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
 
-    // Clear error when field is modified
+    
     if (formErrors[name]) {
       setFormErrors(prev => ({ ...prev, [name]: '' }));
     }
@@ -114,7 +114,7 @@ const BuyNowCheckoutPage = () => {
   const validateForm = (): boolean => {
     const errors: Record<string, string> = {};
     
-    // Different validation based on delivery method
+  
     const isPickup = formData.deliveryMethod === 'pickup';
     
     // Only validate address fields if not pickup
@@ -143,6 +143,25 @@ const BuyNowCheckoutPage = () => {
 
 
   
+  // Calculate prices with quantity - add these computed values
+  const itemPrice = useMemo(() => {
+    if (!buynowcart) return 0;
+    return buynowcart.finalprice * buynowquantity;
+  }, [buynowcart, buynowquantity]);
+
+  const originalPrice = useMemo(() => {
+    if (!buynowcart) return 0;
+    return buynowcart.price * buynowquantity;
+  }, [buynowcart, buynowquantity]);
+
+  const savings = useMemo(() => {
+    return originalPrice - itemPrice;
+  }, [originalPrice, itemPrice]);
+
+  const calculatedTotal = useMemo(() => {
+    return itemPrice + (selectedDeliveryMethod?.price || 0);
+  }, [itemPrice, selectedDeliveryMethod]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitAttempted(true);
@@ -180,18 +199,18 @@ const BuyNowCheckoutPage = () => {
         user_id: user.id,
         items: [{
           product_id: buynowcart.id,
-          quantity: 1,
+          quantity: buynowquantity,
           price: buynowcart.finalprice,
           name: buynowcart.name,
-          final_price: buynowcart.finalprice,
-          original_price: buynowcart.price,
+          final_price: itemPrice,
+          original_price: originalPrice,
           discount: buynowcart.discount
         }],
         shipping_address: formData.deliveryMethod === 'pickup' 
           ? 'Store Pickup' 
           : `${formData.address}, ${formData.city}, ${formData.zipCode}`,
         delivery_method: formData.deliveryMethod,
-        subtotal: buynowcart.finalprice,
+        subtotal: itemPrice,
         shipping_cost: selectedDeliveryMethod?.price || 0,
         total_amount: calculatedTotal,
         payment_method: formData.paymentMethod,
@@ -246,8 +265,6 @@ const BuyNowCheckoutPage = () => {
 
 
   const isAddressDisabled = formData.deliveryMethod === 'pickup';
-
-  const calculatedTotal = buynowcart.finalprice + (selectedDeliveryMethod?.price || 0);
 
   return (
     <MainLayout>
@@ -499,7 +516,7 @@ const BuyNowCheckoutPage = () => {
               </Card>
             </div>
 
-            {/* Order Summary */}
+   
             <div className="lg:col-span-1">
               <Card className="sticky top-24">
                 <CardHeader className="pb-3">
@@ -507,27 +524,28 @@ const BuyNowCheckoutPage = () => {
                 </CardHeader>
                 <CardContent className="pb-0">
                   <div className="space-y-4">
-                    {/* Product Display */}
+                 
                     <div className="flex items-start gap-4 p-4 bg-gray-50 rounded-lg">
                       <div className="w-20 h-20 rounded-lg overflow-hidden bg-white border">
                         <img
-                          src={buynowcart.image_url  || buynowcart.image}
+                          src={buynowcart.image}
                           alt={buynowcart.name}
                           className="w-full h-full object-cover"
                         />
                       </div>
                       <div className="flex-1">
                         <h3 className="font-medium">{buynowcart.name}</h3>
+                        <p className="text-sm text-gray-500">Quantity: {buynowquantity}</p>
                         
                         {/* Price Display with Tooltip */}
                         <div className="mt-2 flex items-center gap-2">
                           <span className="text-lg font-bold">
-                            {currencySymbol} {buynowcart.finalprice}
+                            {currencySymbol} {itemPrice}
                           </span>
                           {parseFloat(buynowcart.discount) > 0 && (
                             <>
                               <span className="text-sm line-through text-gray-500">
-                                {currencySymbol} {buynowcart.price}
+                                {currencySymbol} {originalPrice}
                               </span>
                               <TooltipProvider>
                                 <Tooltip>
@@ -536,7 +554,8 @@ const BuyNowCheckoutPage = () => {
                                   </TooltipTrigger>
                                   <TooltipContent>
                                     <p>Discount: {buynowcart.discount}%</p>
-                                    <p>You save: {currencySymbol} {(parseFloat(buynowcart.price) - buynowcart.finalprice)}</p>
+                                    <p>You save: {currencySymbol} {savings}</p>
+                                    <p>Price per item: {currencySymbol} {buynowcart.finalprice}</p>
                                   </TooltipContent>
                                 </Tooltip>
                               </TooltipProvider>
@@ -551,8 +570,8 @@ const BuyNowCheckoutPage = () => {
                     {/* Price Summary */}
                     <div className="space-y-3 pt-3">
                       <div className="flex justify-between items-center">
-                        <span className="text-gray-600">Item Price</span>
-                        <span>{currencySymbol} {buynowcart.finalprice}</span>
+                        <span className="text-gray-600">Items Subtotal</span>
+                        <span>{currencySymbol} {itemPrice}</span>
                       </div>
                       
                       <div className="flex justify-between items-center">
