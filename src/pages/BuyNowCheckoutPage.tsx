@@ -223,7 +223,8 @@ const BuyNowCheckoutPage = () => {
       if (res.data) {
         const order = res.data;
         clearbuynowCart();
-        localStorage.removeItem('buynowcart');
+                localStorage.removeItem('buynowquantity');
+    localStorage.removeItem('buynowcart');
         localStorage.setItem('orderconform', JSON.stringify(res.data));
 
         toast({

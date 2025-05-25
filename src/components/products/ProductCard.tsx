@@ -165,6 +165,8 @@ const ProductCard: React.FC<ProductCardProps> = ({
     e.stopPropagation();
     
     try {
+               localStorage.removeItem('buynowquantity');
+    localStorage.removeItem('buynowcart');
      buynowCartfunc(product, 1);
       navigate('/checkout/buy-now');
     } catch (error) {

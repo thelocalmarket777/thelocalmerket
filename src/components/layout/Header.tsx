@@ -211,9 +211,7 @@ const Header = () => {
                             src={item.image}
                             alt={item.name}
                             className="w-full h-full object-cover"
-                            onError={(e) => {
-                              e.target.src = '/placeholder-image.jpg'; // Fallback image path
-                            }}
+                        
                           />
                         </div>
                       )}

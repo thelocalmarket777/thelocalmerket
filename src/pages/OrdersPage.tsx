@@ -248,7 +248,7 @@ const currencysymbol = 'Rs.';
                               {order?.order_items?.map((item, index) => (
                                 <div key={index} className="flex items-center">
                                   <div className="w-16 h-16 bg-gray-100 rounded flex items-center justify-center overflow-hidden">
-                               <img src={item?.product_img} alt={item?.product_name} className="w-full h-full object-cover rounded" />
+                               <img src={item?.image} alt={item?.product_name} className="w-full h-full object-cover rounded" />
                                   </div>
                                   <div className="ml-4 flex-1">
                                   <div className="font-medium">

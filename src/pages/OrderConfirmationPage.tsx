@@ -22,19 +22,7 @@ const capitalizeFirstLetter = (str, fallback = '') => {
   return str.charAt(0).toUpperCase() + str.slice(1);
 };
 
-const getProductImage = (item) => {
-  if (!item?.product_img) {
-    return null;
-  }
 
-  try {
-    const baseUrl = import.meta.env.VITE_BASE_URL || 'http://localhost:8000';
-    return `${baseUrl}${item.product_img}`;
-  } catch (error) {
-    console.error('Error constructing image URL:', error);
-    return null;
-  }
-};
 
 export default function OrderConfirmation() {
   
@@ -43,7 +31,7 @@ export default function OrderConfirmation() {
   const order =state.oderconform
   
    
-  
+  const baseUrl = import.meta.env.VITE_BASE_URL || 'http://localhost:3000';
 
   
   return (
@@ -94,9 +82,9 @@ export default function OrderConfirmation() {
                 {order.items.map((item, index) => (
                   <div key={index} className="flex items-center">
                     <div className="w-16 h-16 bg-gray-100 rounded flex items-center justify-center overflow-hidden">
-                      {getProductImage(item) ? (
+                 
                         <img 
-                          src={getProductImage(item)} 
+                          src={`${baseUrl}${item.image}`} 
                           alt={item?.product_name} 
                           className="w-full h-full object-cover rounded"
                           onError={(e) => {
@@ -104,11 +92,7 @@ export default function OrderConfirmation() {
                           }}
                           loading="lazy"
                         />
-                      ) : (
-                        <div className="flex items-center justify-center w-full h-full bg-gray-200">
-                          <ImageIcon className="w-8 h-8 text-gray-400" />
-                        </div>
-                      )}
+              
                     </div>
                     <div className="ml-4 flex-1">
                       <h4 className="font-medium">{item.product_name}</h4>
