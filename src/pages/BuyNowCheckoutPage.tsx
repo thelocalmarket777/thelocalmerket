@@ -22,7 +22,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 const BuyNowCheckoutPage = () => {
   const { buynowcart, clearbuynowCart, buynowquantity } = useCart();
   console.log('buynowquantity:', buynowquantity);
-  const navigate = useNavigate(); 
+  const navigate = useNavigate();
   const { toast } = useToast();
 
   // Enhanced delivery methods with icons and priority indicators
@@ -62,7 +62,7 @@ const BuyNowCheckoutPage = () => {
 
   const token = localStorage.getItem('token');
   const user = JSON.parse(localStorage.getItem('user') || '{}');
-  
+
   const [formData, setFormData] = useState<FormData>({
     address: user?.address || '',
     city: user?.city || '',
@@ -87,14 +87,14 @@ const BuyNowCheckoutPage = () => {
 
     setDeliveryMethods(enhancedDeliveryMethods);
 
-    
+
     setIsLoading(false);
-  }, [ user, navigate, toast]);
+  }, [user, navigate, toast]);
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
 
-    
+
     if (formErrors[name]) {
       setFormErrors(prev => ({ ...prev, [name]: '' }));
     }
@@ -113,17 +113,17 @@ const BuyNowCheckoutPage = () => {
 
   const validateForm = (): boolean => {
     const errors: Record<string, string> = {};
-    
-  
+
+
     const isPickup = formData.deliveryMethod === 'pickup';
-    
+
     // Only validate address fields if not pickup
     if (!isPickup) {
       if (!formData.address) errors.address = 'Street Address is required';
       if (!formData.city) errors.city = 'City is required';
       if (!formData.zipCode) errors.zipCode = 'Zip Code is required';
     }
-    
+
     // Always validate these fields
     if (!formData.phone) errors.phone = 'Phone Number is required';
     if (!formData.deliveryMethod) errors.deliveryMethod = 'Delivery Method is required';
@@ -142,7 +142,7 @@ const BuyNowCheckoutPage = () => {
   );
 
 
-  
+
   // Calculate prices with quantity - add these computed values
   const itemPrice = useMemo(() => {
     if (!buynowcart) return 0;
@@ -206,8 +206,8 @@ const BuyNowCheckoutPage = () => {
           original_price: originalPrice,
           discount: buynowcart.discount
         }],
-        shipping_address: formData.deliveryMethod === 'pickup' 
-          ? 'Store Pickup' 
+        shipping_address: formData.deliveryMethod === 'pickup'
+          ? 'Store Pickup'
           : `${formData.address}, ${formData.city}, ${formData.zipCode}`,
         delivery_method: formData.deliveryMethod,
         subtotal: itemPrice,
@@ -219,12 +219,12 @@ const BuyNowCheckoutPage = () => {
       };
 
       const res = await RemoteServices.orderPlaced(orderData);
-      
+
       if (res.data) {
         const order = res.data;
         clearbuynowCart();
-                localStorage.removeItem('buynowquantity');
-    localStorage.removeItem('buynowcart');
+        localStorage.removeItem('buynowquantity');
+        localStorage.removeItem('buynowcart');
         localStorage.setItem('orderconform', JSON.stringify(res.data));
 
         toast({
@@ -232,9 +232,9 @@ const BuyNowCheckoutPage = () => {
           description: `Order #${res.data.id} has been confirmed`,
         });
 
-     
- 
-      navigate(`/order-confirmation/`, { state: { oderconform: order } });
+
+
+        navigate(`/order-confirmation/`, { state: { oderconform: order } });
       }
     } catch (error: any) {
       const errorMessage = error.response?.data?.message || error.message || 'Failed to place order';
@@ -250,8 +250,8 @@ const BuyNowCheckoutPage = () => {
 
   const getPriorityBadge = (priority?: string) => {
     if (!priority) return null;
-    
-    switch(priority) {
+
+    switch (priority) {
       case 'high':
         return <Badge className="ml-2 bg-red-500">Express</Badge>;
       default:
@@ -285,8 +285,8 @@ const BuyNowCheckoutPage = () => {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Shipping Information */}
             <div className="lg:col-span-2 space-y-6">
-             {/* Delivery Method */}
-             <Card>
+              {/* Delivery Method */}
+              <Card>
                 <CardHeader className="pb-3">
                   <CardTitle>Delivery Method</CardTitle>
                 </CardHeader>
@@ -307,11 +307,10 @@ const BuyNowCheckoutPage = () => {
                         {deliveryMethods.map((method) => (
                           <div
                             key={method.id}
-                            className={`flex items-center justify-between border border-gray-200 rounded-lg p-4 hover:bg-gray-50 cursor-pointer transition-colors ${
-                              method.priority === 'high' ? 'border-red-200 bg-red-50 hover:bg-red-100' : 
-                              method.id === 'pickup' ? 'border-green-200 bg-green-50 hover:bg-green-100' : 
-                              formData.deliveryMethod === method.id ? 'bg-blue-50 border-blue-500' : ''
-                            }`}
+                            className={`flex items-center justify-between border border-gray-200 rounded-lg p-4 hover:bg-gray-50 cursor-pointer transition-colors ${method.priority === 'high' ? 'border-red-200 bg-red-50 hover:bg-red-100' :
+                                method.id === 'pickup' ? 'border-green-200 bg-green-50 hover:bg-green-100' :
+                                  formData.deliveryMethod === method.id ? 'bg-blue-50 border-blue-500' : ''
+                              }`}
                           >
                             <div className="flex items-center gap-3">
                               <RadioGroupItem value={method.id} id={method.id} />
@@ -483,7 +482,7 @@ const BuyNowCheckoutPage = () => {
                   </div>
                 </CardContent>
               </Card>
-             
+
               {/* Payment Method */}
               <Card>
                 <CardHeader className="pb-3">
@@ -511,13 +510,13 @@ const BuyNowCheckoutPage = () => {
                         </div>
                       </div>
                     </div>
-                   
+
                   </RadioGroup>
                 </CardContent>
               </Card>
             </div>
 
-   
+
             <div className="lg:col-span-1">
               <Card className="sticky top-24">
                 <CardHeader className="pb-3">
@@ -525,7 +524,7 @@ const BuyNowCheckoutPage = () => {
                 </CardHeader>
                 <CardContent className="pb-0">
                   <div className="space-y-4">
-                 
+
                     <div className="flex items-start gap-4 p-4 bg-gray-50 rounded-lg">
                       <div className="w-20 h-20 rounded-lg overflow-hidden bg-white border">
                         <img
@@ -537,7 +536,7 @@ const BuyNowCheckoutPage = () => {
                       <div className="flex-1">
                         <h3 className="font-medium">{buynowcart.name}</h3>
                         <p className="text-sm text-gray-500">Quantity: {buynowquantity}</p>
-                        
+
                         {/* Price Display with Tooltip */}
                         <div className="mt-2 flex items-center gap-2">
                           <span className="text-lg font-bold">
@@ -564,7 +563,7 @@ const BuyNowCheckoutPage = () => {
                           )}
                         </div>
 
-                      
+
                       </div>
                     </div>
 
@@ -574,18 +573,18 @@ const BuyNowCheckoutPage = () => {
                         <span className="text-gray-600">Items Subtotal</span>
                         <span>{currencySymbol} {itemPrice}</span>
                       </div>
-                      
+
                       <div className="flex justify-between items-center">
                         <span className="text-gray-600">Shipping</span>
                         <span>
-                          {selectedDeliveryMethod?.price === 0 
-                            ? 'Free' 
+                          {selectedDeliveryMethod?.price === 0
+                            ? 'Free'
                             : `${currencySymbol} ${selectedDeliveryMethod?.price || '0.00'}`
                           }
                         </span>
                       </div>
                       <Separator />
-                      
+
                       <div className="flex justify-between items-center pt-1">
                         <span className="font-semibold">Total</span>
                         <span className="font-semibold text-lg">

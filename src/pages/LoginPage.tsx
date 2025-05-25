@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
-import { AlertCircle, CheckCircle } from 'lucide-react';
+import { AlertCircle, CheckCircle, Eye, EyeOff } from 'lucide-react';
 import { User } from '@/types';
 import { useToast } from '@/components/ui/use-toast';
 import RemoteServices from '@/RemoteService/Remoteservice';
@@ -163,7 +163,6 @@ const LoginPage = () => {
     } catch (error) {
       console.error('Registration error:', error);
 
-      // Handle specific error messages from the backend
       if (error.response?.data?.email) {
         setRegisterError(`Email error: ${error.response.data.email[0]}`);
       } else if (error.response?.data?.detail) {
@@ -273,7 +272,7 @@ const LoginPage = () => {
       setNewPassword('');
       setConfirmNewPassword('');
 
-      // Give user time to read the success message before redirecting
+
       setTimeout(() => {
         setActiveTab('login');
         setResetSent(false);
@@ -344,7 +343,7 @@ const LoginPage = () => {
         });
 
         setTimeout(() => {
-          navigate('/');
+          navigate(from);
         }, 1500);
       } else {
         toast({
@@ -441,18 +440,28 @@ setTimeout(() => {
                         Forgot password?
                       </button>
                     </div>
-                    <Input
-                      id="password"
-                      
-                      type={togglepassword.loginpassowrd ? "text" : "password"}
-                      onClick={handlepasswordtoggle
-                       }
-                      value={loginPassword}
-                      onChange={(e) => setLoginPassword(e.target.value)}
-                      placeholder="••••••••"
-                      className="mt-1"
-                      required
-                    />
+                    <div className="relative">
+                      <Input
+                        id="password"
+                        type={togglepassword.loginpassowrd ? "text" : "password"}
+                        value={loginPassword}
+                        onChange={(e) => setLoginPassword(e.target.value)}
+                        placeholder="••••••••"
+                        className="mt-1"
+                        required
+                      />
+                      <button
+                        type="button"
+                        onClick={(e) => handlepasswordtoggle(e)}
+                        className="absolute right-3 top-[60%] transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                      >
+                        {togglepassword.loginpassowrd ? (
+                          <EyeOff size={16} />
+                        ) : (
+                          <Eye size={16} />
+                        )}
+                      </button>
+                    </div>
                   </div>
 
                   {loginError && (
@@ -507,31 +516,54 @@ setTimeout(() => {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <Label htmlFor="register-password" className="font-medium">Password</Label>
-                      <Input
-                        id="register-password"
-                      
-                        type={togglepassword.registerPassword ? "text" : "password"}
-                        onClick={() => settogglepassword({ ...togglepassword, registerPassword: !togglepassword.registerPassword })}
-                        value={registerPassword}
-                        onChange={(e) => setRegisterPassword(e.target.value)}
-                        placeholder="••••••••"
-                        className="mt-1"
-                        required
-                      />
+                      <div className="relative">
+                        <Input
+                          id="register-password"
+                          type={togglepassword.registerPassword ? "text" : "password"}
+                          value={registerPassword}
+                          onChange={(e) => setRegisterPassword(e.target.value)}
+                          placeholder="••••••••"
+                          className="mt-1"
+                          required
+                        />
+                        <button
+                          type="button"
+                          onClick={() => settogglepassword({ ...togglepassword, registerPassword: !togglepassword.registerPassword })}
+                          className="absolute right-3 top-[60%] transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                        >
+                          {togglepassword.registerPassword ? (
+                            <EyeOff size={16} />
+                          ) : (
+                            <Eye size={16} />
+                          )}
+                        </button>
+                      </div>
                     </div>
 
                     <div>
                       <Label htmlFor="confirm-password" className="font-medium">Confirm Password</Label>
-                      <Input
-                        id="confirm-password"
-                        type={togglepassword.registerConfirmPassword ? "text" : "password"}
-                        onClick={() => settogglepassword({ ...togglepassword, registerConfirmPassword: !togglepassword.registerConfirmPassword })}
-                        value={registerConfirmPassword}
-                        onChange={(e) => setRegisterConfirmPassword(e.target.value)}
-                        placeholder="••••••••"
-                        className="mt-1"
-                        required
-                      />
+                      <div className="relative">
+                        <Input
+                          id="confirm-password"
+                          type={togglepassword.registerConfirmPassword ? "text" : "password"}
+                          value={registerConfirmPassword}
+                          onChange={(e) => setRegisterConfirmPassword(e.target.value)}
+                          placeholder="••••••••"
+                          className="mt-1"
+                          required
+                        />
+                        <button
+                          type="button"
+                          onClick={() => settogglepassword({ ...togglepassword, registerConfirmPassword: !togglepassword.registerConfirmPassword })}
+                          className="absolute right-3 top-[60%] transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                        >
+                          {togglepassword.registerConfirmPassword ? (
+                            <EyeOff size={16} />
+                          ) : (
+                            <Eye size={16} />
+                          )}
+                        </button>
+                      </div>
                     </div>
                   </div>
 

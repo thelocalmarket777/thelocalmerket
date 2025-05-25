@@ -188,7 +188,11 @@ const ProductCard: React.FC<ProductCardProps> = ({
       description: 'Please login to continue.',
       duration: 3000,
     }),
-    navigate('/login')
+
+    setInterval(() => {
+      navigate('/login')
+    },  2000)
+    
   );
 }
 

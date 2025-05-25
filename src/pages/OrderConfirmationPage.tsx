@@ -26,12 +26,12 @@ const capitalizeFirstLetter = (str, fallback = '') => {
 
 export default function OrderConfirmation() {
   
-  // The order data provided in the JSON
+  
   const {state}=useLocation()
   const order =state.oderconform
   
    
-  const baseUrl = import.meta.env.VITE_BASE_URL || 'http://localhost:3000';
+
 
   
   return (
@@ -84,7 +84,7 @@ export default function OrderConfirmation() {
                     <div className="w-16 h-16 bg-gray-100 rounded flex items-center justify-center overflow-hidden">
                  
                         <img 
-                          src={`${baseUrl}${item.product_img}`} 
+                          src={item.product_img}
                           alt={item?.product_name} 
                           className="w-full h-full object-cover rounded"
                         
