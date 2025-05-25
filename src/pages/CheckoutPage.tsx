@@ -565,7 +565,7 @@ const CheckoutPage = () => {
                         <div className="flex items-start">
                           <div className="w-12 h-12 rounded-md overflow-hidden bg-gray-100 border border-gray-200 mr-3">
                             <img
-                              src={item.product.image_url || (item.product.media && item.product.media[0]?.file)}
+                              src={item.product.image}
                               alt={item.product.name}
                               className="w-full h-full object-cover"
                             />
