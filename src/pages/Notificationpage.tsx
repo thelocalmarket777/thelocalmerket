@@ -34,6 +34,8 @@ export default function NotificationPage() {
   const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
+    checklogin();
+  
     setLoading(true);
     RemoteServices.getnotificationHistory()
       .then((response) => {
@@ -168,6 +170,22 @@ export default function NotificationPage() {
       </MainLayout>
     );
   }
+  
+const checklogin=()=>{
+    const token = localStorage.getItem('token');
+  if(!token)return (
+
+    <MainLayout>
+      <div className="h-full flex items-center justify-center p-6">
+        <div className="p-3 rounded-full bg-yellow-100 mb-4">
+          <ShieldAlert className="text-yellow-600" size={24} />
+        </div>
+        <h3 className="text-lg font-medium text-yellow-600">Unauthorized</h3>
+        <p className="text-yellow-500 text-center">Please log in to view notifications.</p>
+      </div>
+    </MainLayout>
+  );
+}
   const  currencysymbol ='Rs'
 
   return (

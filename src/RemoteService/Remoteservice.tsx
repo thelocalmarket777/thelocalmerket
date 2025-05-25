@@ -1,5 +1,6 @@
-// src/RemoteService/Remoteservice.js
+
 import axios from 'axios';
+
 
 const remote = {
   // address: 'http://127.0.0.1:8000/api/',
@@ -28,7 +29,11 @@ const requestHeaders = (isFormData = false) => {
   };
 };
 
-// Attempt to refresh access token using the stored refresh token
+
+
+
+
+
 const refreshAccessToken = async () => {
   try {
     const refreshToken = getRefreshToken();
@@ -50,7 +55,7 @@ const refreshAccessToken = async () => {
   return null;
 };
 
-// Create an axios instance
+
 const axiosInstance = axios.create();
 
 // Always inject Authorization header if token exists

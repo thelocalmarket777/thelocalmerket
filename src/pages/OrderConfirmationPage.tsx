@@ -84,12 +84,10 @@ export default function OrderConfirmation() {
                     <div className="w-16 h-16 bg-gray-100 rounded flex items-center justify-center overflow-hidden">
                  
                         <img 
-                          src={`${baseUrl}${item.image}`} 
+                          src={`${baseUrl}${item.product_img}`} 
                           alt={item?.product_name} 
                           className="w-full h-full object-cover rounded"
-                          onError={(e) => {
-                            e.currentTarget.src = '/placeholder-image.jpg';
-                          }}
+                        
                           loading="lazy"
                         />
               

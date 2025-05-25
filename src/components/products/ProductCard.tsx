@@ -103,7 +103,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
   const handleWishlist = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    
+        checklogin()
     if (isWishlistLoading) return;
     
     setIsWishlistLoading(true);
@@ -163,9 +163,9 @@ const ProductCard: React.FC<ProductCardProps> = ({
   const handleBuyNow = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    
+    checklogin()
     try {
-               localStorage.removeItem('buynowquantity');
+    localStorage.removeItem('buynowquantity');
     localStorage.removeItem('buynowcart');
      buynowCartfunc(product, 1);
       navigate('/checkout/buy-now');
@@ -177,8 +177,20 @@ const ProductCard: React.FC<ProductCardProps> = ({
       });
     }
   };
+  
+  const checklogin = () => {
+    const token = localStorage.getItem('token');
 
- 
+  if(!token) return (
+   toast({
+      variant: 'destructive',
+      title: 'Login Required',
+      description: 'Please login to continue.',
+      duration: 3000,
+    }),
+    navigate('/login')
+  );
+}
 
   
 
