@@ -13,8 +13,8 @@ interface ProductCardProps {
   showQuickView?: boolean;
 }
 
-const ProductCard: React.FC<ProductCardProps> = ({ 
-  product, 
+const ProductCard: React.FC<ProductCardProps> = ({
+  product,
   size = 'md',
 
 }) => {
@@ -22,7 +22,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
   const currencySymbol = 'Rs.';
   const { toast } = useToast();
   const navigate = useNavigate();
-  
+
 
   const [isWishlisted, setIsWishlisted] = useState(product?.is_wishlisted || false);
   const [isWishlistLoading, setIsWishlistLoading] = useState(false);
@@ -30,12 +30,23 @@ const ProductCard: React.FC<ProductCardProps> = ({
   const [imageError, setImageError] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
 
- 
+
   const hasDiscount = product?.discount && product?.discount > 0;
-  
 
-  const discountPercentage =product?.discount
 
+  const discountPercentage = product?.discount
+
+  const checklogin = () => {
+    const token = localStorage.getItem('token');
+
+    if (!token) return (
+      toast({
+        variant: 'destructive',
+        title: 'Login Required',
+        description: 'Please login to continue.',
+        duration: 3000,
+      }));
+  }
   const sizeConfig = {
     sm: {
       imageHeight: 'h-36',
@@ -86,8 +97,8 @@ const ProductCard: React.FC<ProductCardProps> = ({
                 i < fullStars
                   ? "text-yellow-500 fill-yellow-500"
                   : i === fullStars && hasHalfStar
-                  ? "text-yellow-500 fill-yellow-500 opacity-50"
-                  : "text-gray-300"
+                    ? "text-yellow-500 fill-yellow-500 opacity-50"
+                    : "text-gray-300"
               }
             />
           ))}
@@ -103,17 +114,17 @@ const ProductCard: React.FC<ProductCardProps> = ({
   const handleWishlist = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-        checklogin()
+    checklogin()
     if (isWishlistLoading) return;
-    
+
     setIsWishlistLoading(true);
 
     const previousState = isWishlisted;
     setIsWishlisted(!isWishlisted);
-    
+
     try {
       const response = await RemoteServices.createwishlist({ product_id: product.id });
-      
+
       toast({
         title: isWishlisted ? 'Removed from wishlist' : 'Added to wishlist',
         description: response.data.message || 'Wishlist updated successfully',
@@ -121,7 +132,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
       });
     } catch (error) {
       setIsWishlisted(previousState);
-      
+
       toast({
         variant: 'destructive',
         title: 'Error',
@@ -136,11 +147,11 @@ const ProductCard: React.FC<ProductCardProps> = ({
   const handleAddToCart = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    
+
     if (isAddingToCart) return;
-    
+
     setIsAddingToCart(true);
-    
+
     try {
       addItem(product, 1);
       toast({
@@ -165,9 +176,9 @@ const ProductCard: React.FC<ProductCardProps> = ({
     e.stopPropagation();
     checklogin()
     try {
-    localStorage.removeItem('buynowquantity');
-    localStorage.removeItem('buynowcart');
-     buynowCartfunc(product, 1);
+      localStorage.removeItem('buynowquantity');
+      localStorage.removeItem('buynowcart');
+      buynowCartfunc(product, 1);
       navigate('/checkout/buy-now');
     } catch (error) {
       toast({
@@ -177,29 +188,13 @@ const ProductCard: React.FC<ProductCardProps> = ({
       });
     }
   };
-  
-  const checklogin = () => {
-    const token = localStorage.getItem('token');
 
-  if(!token) return (
-   toast({
-      variant: 'destructive',
-      title: 'Login Required',
-      description: 'Please login to continue.',
-      duration: 3000,
-    }),
 
-    setInterval(() => {
-      navigate('/login')
-    },  2000)
-    
-  );
-}
 
-  
+
 
   return (
-    <div 
+    <div
       className="group relative flex flex-col overflow-hidden rounded-xl border border-gray-200 bg-white transition-all duration-300 hover:shadow-lg hover:-translate-y-1"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
@@ -219,7 +214,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
               disabled={isWishlistLoading}
               aria-label={isWishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
             >
-              <Heart size={config.heartSize} className={`transition-all duration-200 ${isWishlisted ? 'fill-current' : ''} ${isWishlistLoading ? 'animate-pulse' : ''}`}/>
+              <Heart size={config.heartSize} className={`transition-all duration-200 ${isWishlisted ? 'fill-current' : ''} ${isWishlistLoading ? 'animate-pulse' : ''}`} />
             </button>
           </div>
         </div>
@@ -231,8 +226,8 @@ const ProductCard: React.FC<ProductCardProps> = ({
             onError={() => setImageError(true)}
             loading="lazy"
           />
-          
-        
+
+
           <div className={`
             absolute inset-0 bg-black/0 transition-all duration-300
             ${isHovered ? 'bg-black/5' : ''}
@@ -274,7 +269,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
                 {isAddingToCart ? 'Adding...' : 'Add to Cart'}
               </span>
             </Button>
-            
+
             <Button
               size={config.buttonSize}
               variant="default"
