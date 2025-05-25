@@ -2,6 +2,8 @@ import { useEffect, useState, useMemo } from "react";
 import { Bell, ShoppingBag, Truck, Tag, Clock, CheckCircle, X, ShieldAlert, Image as ImageIcon } from "lucide-react";
 import MainLayout from "@/components/layout/MainLayout";
 import RemoteServices from "@/RemoteService/Remoteservice";
+import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
 
 export default function NotificationPage() {
   const [activeTab, setActiveTab] = useState<"all" | "order" | "promotion" | "system">("all");
@@ -74,15 +76,15 @@ export default function NotificationPage() {
    const token = localStorage.getItem('token');
   if(!token)return (
 
-    <MainLayout>
-      <div className="h-full flex items-center justify-center p-6">
-        <div className="p-3 rounded-full bg-yellow-100 mb-4">
-          <ShieldAlert className="text-yellow-600" size={24} />
+  <MainLayout>
+        <div className="container mx-auto px-4 py-12 text-center">
+          <h1 className="text-2xl font-bold mb-4">Access Denied</h1>
+          <p className="mb-6">Please log in to view your notification.</p>
+          <Button asChild>
+            <Link to="/login">Login</Link>
+          </Button>
         </div>
-        <h3 className="text-lg font-medium text-yellow-600">Unauthorized</h3>
-        <p className="text-yellow-500 text-center">Please log in to view notifications.</p>
-      </div>
-    </MainLayout>
+      </MainLayout>
   );
 
   const markAllAsRead = () => {

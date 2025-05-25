@@ -271,7 +271,6 @@ const HomePage = () => {
     setState(prev => ({ ...prev, isLoading: true }));
     RemoteServices.getTopCatogires()
       .then((response) => {
-        console.log("Top categories data:", response.data);
         setState(prev => ({
           ...prev,
           topCategories: response.data || {},
@@ -284,7 +283,6 @@ const HomePage = () => {
         }));
       })
       .catch((error) => {
-        console.error("Error fetching data:", error);
         setState(prev => ({
           ...prev,
           hasError: true,

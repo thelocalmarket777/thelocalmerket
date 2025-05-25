@@ -204,7 +204,6 @@ const CheckoutPage = () => {
     try {
       const res = await RemoteServices.orderPlaced(orderData);
       const order = res.data;
-      console.log('res', res);
       
       await Promise.all([
         clearCart(),
@@ -212,16 +211,13 @@ const CheckoutPage = () => {
         localStorage.setItem('orderconform', JSON.stringify(order))
       ]);
 
-      // Show success notification
       toast({
         title: 'Order Placed Successfully',
         description: `Your order #${order.id} has been confirmed`,
       });
 
-      // Redirect to order confirmation
       navigate(`/order-confirmation/`, { state: { oderconform: order } });
     } catch (error) {
-      console.error('Order placement error:', error);
       const errorMessage = error instanceof Error ? error.message : 'An error occurred while processing your order';
 
       toast({
